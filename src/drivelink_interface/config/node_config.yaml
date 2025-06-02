@@ -1,0 +1,7 @@
+serial_config:
+  baud: 576000
+  port: ttyUSB0
+
+diff_drive_config:
+  wheel_radius: 0.05
+  wheel_base: 0.3

@@ -1,0 +1,67 @@
+{
+    "controllerProperties": {
+        "numMotors": 2,
+        "updateFrequencies": {
+            "control_run_frequency": 100,
+            "odo_broadcast_frequency": 50
+        }
+    },
+    "serialConnDetails": {
+        "baud": 576000,
+        "port": "COM5"
+    },
+    "wheelData": [
+        {
+            "anglePIDConstants": {
+                "d": 0,
+                "i": 0,
+                "p": 0
+            },
+            "control_mode": "OFF",
+            "motorConnections": {
+                "dir": 15,
+                "enc_a": 4,
+                "enc_b": 5,
+                "pwm": 16
+            },
+            "motor_id": 0,
+            "odoBroadcastStatus": {
+                "angle": false,
+                "pwm_value": false,
+                "speed": false
+            },
+            "radians_per_tick": 1,
+            "speedPIDConstants": {
+                "d": 0,
+                "i": 0,
+                "p": 0
+            }
+        },
+        {
+            "anglePIDConstants": {
+                "d": 0,
+                "i": 0,
+                "p": 0
+            },
+            "control_mode": "OFF",
+            "motorConnections": {
+                "dir": 17,
+                "enc_a": 6,
+                "enc_b": 7,
+                "pwm": 18
+            },
+            "motor_id": 1,
+            "odoBroadcastStatus": {
+                "angle": false,
+                "pwm_value": false,
+                "speed": false
+            },
+            "radians_per_tick": 1,
+            "speedPIDConstants": {
+                "d": 0,
+                "i": 0,
+                "p": 0
+            }
+        }
+    ]
+}

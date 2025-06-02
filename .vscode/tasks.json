@@ -1,0 +1,83 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build",
+      "type": "shell",
+      "command": "source /opt/ros/kilted/setup.bash && colcon build --packages-select drivelink_interface --cmake-args -DCMAKE_BUILD_TYPE=Debug",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "build for ARM",
+      "type": "shell",
+      "command": "source /opt/ros/kilted/setup.bash && colcon build --packages-select drivelink_interface --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build drivelink_interface",
+      "type": "shell",
+      "command": "source /opt/ros/kilted/setup.bash && colcon build --packages-select drivelink_interface --cmake-args -DCMAKE_BUILD_TYPE=Release",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build and Run drivelink_interface",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "source /opt/ros/kilted/setup.bash && cd ~/ros2_ws && colcon build --packages-select drivelink_interface && source install/setup.bash && ros2 launch drivelink_interface drivelink_interface_node.launch.py"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "type": "shell",
+      "label": "Clean Workspace",
+      "command": "bash",
+      "args": [
+        "-c",
+        "rm -rf build/ install/ log/"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "detail": "Removes build, install, and log directories from the workspace"
+    },
+    {
+      "label": "Build joy_to_cmdvel",
+      "type": "shell",
+      "command": "source /opt/ros/kilted/setup.bash && colcon build --packages-select joy_to_cmdvel --cmake-args -DCMAKE_BUILD_TYPE=Debug",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run joy_to_cmdvel",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "source /opt/ros/kilted/setup.bash && cd ~/ros2_ws && source install/setup.bash && ros2 launch joy_to_cmdvel joy_to_cmdvel.launch.py"
+      ],
+      "problemMatcher": [],
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      }
+    }
+  ]
+}
