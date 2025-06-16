@@ -38,6 +38,13 @@ RUN rosdep update
 # Source ROS setup in future shells
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 
-################################
-## ADD ANY CUSTOM SETUP BELOW ##
-################################
+# Run Zenoh router
+# Copy the entrypoint script into the container
+COPY zenoh_entrypoint.sh /zenoh_entrypoint.sh
+RUN sudo chmod +x /zenoh_entrypoint.sh
+
+# Set the entrypoint
+ENTRYPOINT ["/zenoh_entrypoint.sh"]
+
+# set a default command (e.g., bash)
+CMD ["/bin/bash"]

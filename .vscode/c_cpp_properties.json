@@ -6,10 +6,9 @@
                 "limitSymbolsToIncludedHeaders": false
             },
             "includePath": [
-                "/opt/ros/jazzy/include/**",
+                "/opt/ros/kilted/include/**",
                 "/usr/include/**",
-                "${workspaceFolder}/src/drivelink_interface/include/drivelink_interface",
-                "/home/tarun/Qt/6.9.0/gcc_64/include/**"
+                "${workspaceFolder}/src/drivelink_interface/include/drivelink_interface"
             ],
             "name": "ROS",
             "intelliSenseMode": "gcc-x64",

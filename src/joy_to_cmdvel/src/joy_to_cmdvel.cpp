@@ -7,13 +7,17 @@ class JoyToCmdVel : public rclcpp::Node
 public:
     JoyToCmdVel() : Node("joy_to_cmdvel")
     {
-        // Declare parameters
-        this->declare_parameter("linear_axis", 1);  // Usually left stick vertical
-        this->declare_parameter("angular_axis", 0); // Usually left stick horizontal
+        // Declare parameters with default values
+        // linear_axis: Index of joystick axis for linear velocity (default: 1, usually left stick vertical)
+        this->declare_parameter("linear_axis", 1);  
+        // angular_axis: Index of joystick axis for angular velocity (default: 0, usually left stick horizontal)
+        this->declare_parameter("angular_axis", 0); 
+        // linear_scale: Scaling factor for linear velocity (default: 1.0)
         this->declare_parameter("linear_scale", 1.0);
+        // angular_scale: Scaling factor for angular velocity (default: 1.0)
         this->declare_parameter("angular_scale", 1.0);
 
-        // Get parameters
+        // Get parameters (can be overridden via launch file or command line)
         this->get_parameter("linear_axis", linear_axis_);
         this->get_parameter("angular_axis", angular_axis_);
         this->get_parameter("linear_scale", linear_scale_);
