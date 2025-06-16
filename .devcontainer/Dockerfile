@@ -1,4 +1,4 @@
-FROM osrf/ros:jazzy-desktop
+FROM osrf/ros:kilted-desktop
 
 # Add ubuntu user with same UID and GID as your host system, if it doesn't already exist
 ARG USERNAME=ubuntu
