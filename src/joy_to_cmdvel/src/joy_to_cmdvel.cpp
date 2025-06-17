@@ -38,10 +38,16 @@ private:
     {
         geometry_msgs::msg::Twist twist_msg;
 
+        // Check if the required axes are present in the joystick message
         if (msg->axes.size() > std::max(linear_axis_, angular_axis_)) {
             twist_msg.linear.x = linear_scale_ * msg->axes[linear_axis_];
             twist_msg.angular.z = angular_scale_ * msg->axes[angular_axis_];
             cmd_vel_pub_->publish(twist_msg);
+        } else {
+            // Log a warning if axes are missing or out of range
+            RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 2000,
+                "Joystick axes out of range: received %zu axes, expected at least %d. No cmd_vel published.",
+                msg->axes.size(), std::max(linear_axis_, angular_axis_) + 1);
         }
     }
 

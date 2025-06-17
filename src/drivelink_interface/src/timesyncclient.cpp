@@ -13,7 +13,7 @@ TimeSyncClient::TimeSyncClient(SerialHandler *serialHandler,
     connect(communicationInterface, &CommunicationInterface::timeSyncReplyReceived,
             this, &TimeSyncClient::readSyncReply, Qt::DirectConnection);
 
-    //startSync(3000);
+    startSync();
 }
 
 uint16_t TimeSyncClient::crc16_ccitt(const uint8_t *data, size_t length)
@@ -28,19 +28,21 @@ uint16_t TimeSyncClient::crc16_ccitt(const uint8_t *data, size_t length)
     return crc;
 }
 
-void TimeSyncClient::startSync(uint32_t period_ms)
+void TimeSyncClient::startSync()
 {
-    syncTimer.start(period_ms);
+    isSyncing = true;
 }
 
 void TimeSyncClient::stopSync()
 {
-    has_previous_sync = false;
-    syncTimer.stop();
+    isSyncing = false;
 }
 
 void TimeSyncClient::sendSyncRequest()
 {
+    if (!isSyncing)
+        return;
+
     t0 = clock->now().nanoseconds();
     serialHandler->sendCommandandFlush(Command::SYNC_TIME);
 }

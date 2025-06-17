@@ -59,6 +59,6 @@ signals:
     // void sendOdometryBroadcastStatus(int motor_id, odo_broadcast_flags_t flags);
     // void sendPIDConstants(int motor_id, int type, pid_constants_t pid_constants);
 
-    void startTimesync(uint32_t period_ms);
+    void startTimesync();
     void stopTimesync();
 };

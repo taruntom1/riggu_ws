@@ -41,7 +41,7 @@ void ControllerManager::manageQtConnections()
     QObject::connect(this, &ControllerManager::sendWheelData, commInterface, &CommunicationInterface::sendWheelData);
 
     // TimeSyncClient Connections
-    QObject::connect(this, &ControllerManager::setTimeSync, timeSyncClient, &TimeSyncClient::startSync, Qt::QueuedConnection);
+    QObject::connect(this, &ControllerManager::startTimesync, timeSyncClient, &TimeSyncClient::startSync, Qt::QueuedConnection);
     QObject::connect(this, &ControllerManager::stopTimesync, timeSyncClient, &TimeSyncClient::stopSync, Qt::QueuedConnection);
 }
 
@@ -146,7 +146,7 @@ void ControllerManager::setTimeSync(bool status)
     if (status)
     {
         RCLCPP_INFO(logger, "Enabling time synchronization");
-        emit startTimesync(3000); // time syncronization period is 3 seconds
+        emit startTimesync(); // time syncronization period is 3 seconds
     }
     else
     {

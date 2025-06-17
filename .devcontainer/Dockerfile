@@ -38,6 +38,9 @@ RUN rosdep update
 # Source ROS setup in future shells
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 
+# Set zenoh as the default rmw
+ENV RMW_IMPLEMENTATION=rmw_zenoh_cpp
+
 # Run Zenoh router
 # Copy the entrypoint script into the container
 COPY zenoh_entrypoint.sh /zenoh_entrypoint.sh

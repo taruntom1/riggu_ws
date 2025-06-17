@@ -33,12 +33,14 @@ private:
     bool has_previous_sync = false;
     constexpr static double alpha = 0.2;
 
+    bool isSyncing = false;
+
     rclcpp::Clock *clock;
 
     uint16_t crc16_ccitt(const uint8_t *data, size_t length);
 
 public slots:
-    void startSync(uint32_t period_ms = 3000);
+    void startSync();
     void stopSync();
 private slots:
     void sendSyncRequest();
