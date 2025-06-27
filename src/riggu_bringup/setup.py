@@ -20,6 +20,7 @@ setup(
         # Include all config files
         (os.path.join('share', package_name, 'config'), [f for f in glob('config/*') if os.path.isfile(f)]),
         (os.path.join('share', package_name, 'config', 'slam_toolbox'), glob('config/slam_toolbox/*')),
+        (os.path.join('share', package_name, 'config', 'drivelink'), glob('config/drivelink/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

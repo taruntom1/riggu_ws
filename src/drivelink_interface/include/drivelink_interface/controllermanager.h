@@ -23,13 +23,15 @@ public:
     explicit ControllerManager(CommunicationInterface *commInterface = nullptr,
                                TimeSyncClient *timeSyncClient = nullptr,
                                SerialConfig serialConfig = {},
+                               std::shared_ptr<rclcpp::Node> node = nullptr,
                                QObject *parent = nullptr);
     ~ControllerManager();
 
 private:
     CommunicationInterface *commInterface;
     TimeSyncClient *timeSyncClient;
-    rclcpp::Logger logger = rclcpp::get_logger("Controller Manager");
+    std::shared_ptr<rclcpp::Node> node_;
+    rclcpp::Logger logger;
 
     QString port_name;
     int baud_rate;

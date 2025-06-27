@@ -3,8 +3,10 @@
 ControllerManager::ControllerManager(CommunicationInterface *commInterface,
                                      TimeSyncClient *timeSyncClient,
                                      SerialConfig serialConfig,
+                                     std::shared_ptr<rclcpp::Node> node,
                                      QObject *parent)
     : QObject(parent), commInterface(commInterface), timeSyncClient(timeSyncClient),
+      node_(node), logger(node ? node->get_logger() : rclcpp::get_logger("Controller Manager")),
       port_name(QString::fromStdString(serialConfig.port)), baud_rate(serialConfig.baud)
 {
     manageQtConnections();
@@ -47,12 +49,40 @@ void ControllerManager::manageQtConnections()
 
 bool ControllerManager::readConfigurationJson()
 {
-    std::string package_path = ament_index_cpp::get_package_share_directory("drivelink_interface");
-    std::string path = package_path + "/config/controller_config.json";
-    // std::string path = "/home/tarun/ros2_ws/install/drivelink_interface/share/drivelink_interface/config/controller_config.json";
-    QString json_path = QString::fromStdString(path);
-
-    RCLCPP_INFO(logger, "Reading configuration JSON from: %s", json_path.toStdString().c_str());
+    QString json_path;
+    
+    if (node_) {
+        // Use ROS2 parameter for JSON config path
+        std::string package_path = ament_index_cpp::get_package_share_directory("drivelink_interface");
+        std::string default_json_path = package_path + "/config/controller_config.json";
+        
+        try {
+            // Declare parameter with default value
+            node_->declare_parameter<std::string>("controller_config_path", default_json_path);
+            
+            // Get the parameter value
+            std::string config_path = node_->get_parameter("controller_config_path").as_string();
+            json_path = QString::fromStdString(config_path);
+            
+            RCLCPP_INFO(logger, "Reading configuration JSON from parameter 'controller_config_path': %s", config_path.c_str());
+        } catch (const rclcpp::exceptions::ParameterAlreadyDeclaredException &e) {
+            // Parameter already declared, just get its value
+            std::string config_path = node_->get_parameter("controller_config_path").as_string();
+            json_path = QString::fromStdString(config_path);
+            
+            RCLCPP_DEBUG(logger, "Using existing parameter 'controller_config_path': %s", config_path.c_str());
+        } catch (const std::exception &e) {
+            RCLCPP_ERROR(logger, "Error handling parameter 'controller_config_path': %s. Using default path.", e.what());
+            json_path = QString::fromStdString(default_json_path);
+        }
+    } else {
+        // Fallback when no node is provided
+        std::string package_path = ament_index_cpp::get_package_share_directory("drivelink_interface");
+        std::string path = package_path + "/config/controller_config.json";
+        json_path = QString::fromStdString(path);
+        
+        RCLCPP_WARN(logger, "No ROS2 node provided, using default path: %s", path.c_str());
+    }
 
     if (json_path.isEmpty())
     {

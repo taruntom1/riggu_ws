@@ -113,5 +113,6 @@
         "qfile": "cpp",
         "qtimer": "cpp",
         "qstring": "cpp"
-    }
+    },
+    "cmake.ignoreCMakeListsMissing": true
 }

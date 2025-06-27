@@ -37,11 +37,8 @@ int main(int argc, char *argv[])
     commThread->start();
 
     // --- Application Modules ---
-    // Reading configurations from yaml file
-    std::string package_path = ament_index_cpp::get_package_share_directory("drivelink_interface");
-    std::string path = package_path + "/config/node_config.yaml";
-    //std::string path = "/home/tarun/ros2_ws/install/drivelink_interface/share/drivelink_interface/config/node_config.yaml";
-    NodeConfigParser parser(path);
+    // Reading configurations from yaml file using ROS2 parameters
+    NodeConfigParser parser(rosWorker->getNode());
 
     if (!parser.isValid())
     {
@@ -50,7 +47,7 @@ int main(int argc, char *argv[])
     }
 
     SerialConfig serial = parser.getSerialConfig();
-    ControllerManager *controllerManager = new ControllerManager(commInterface, timeSyncClient, serial);
+    ControllerManager *controllerManager = new ControllerManager(commInterface, timeSyncClient, serial, rosWorker->getNode());
     diff_drive_config_t diff_drive_config;
     diff_drive_config.setWheelRadius(1);
     diff_drive_config.setWheelBase(1);

@@ -1,6 +1,0 @@
-drivelink_interface_config_node:
-  ros__parameters:
-    serial_config.baud: 576000
-    serial_config.port: "/dev/ttyUSB0"
-    diff_drive_config.wheel_radius: 0.1
-    diff_drive_config.wheel_base: 0.5

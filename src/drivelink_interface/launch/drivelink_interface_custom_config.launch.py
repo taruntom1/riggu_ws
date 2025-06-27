@@ -1,32 +1,32 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
-    # Declare launch arguments for configuration file paths
+    """
+    Example launch file showing how to use custom configuration files.
+    
+    Usage:
+      ros2 launch drivelink_interface drivelink_interface_custom_config.launch.py \
+        node_config_path:=/path/to/custom_node_config.yaml \
+        controller_config_path:=/path/to/custom_controller_config.json
+    """
+    
+    # Declare launch arguments for custom configuration file paths
     node_config_path_arg = DeclareLaunchArgument(
         'node_config_path',
-        default_value=PathJoinSubstitution([
-            FindPackageShare('drivelink_interface'),
-            'config',
-            'node_config.yaml'
-        ]),
-        description='Path to the node configuration YAML file'
+        default_value='/path/to/custom_node_config.yaml',
+        description='Path to the custom node configuration YAML file'
     )
     
     controller_config_path_arg = DeclareLaunchArgument(
         'controller_config_path',
-        default_value=PathJoinSubstitution([
-            FindPackageShare('drivelink_interface'),
-            'config',
-            'controller_config.json'
-        ]),
-        description='Path to the controller configuration JSON file'
+        default_value='/path/to/custom_controller_config.json',
+        description='Path to the custom controller configuration JSON file'
     )
 
-    # Create the node with parameters
+    # Create the node with custom parameters
     drivelink_interface_node = Node(
         package='drivelink_interface',
         executable='drivelink_interface_node',
