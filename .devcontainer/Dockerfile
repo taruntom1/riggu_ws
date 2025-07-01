@@ -29,7 +29,9 @@ RUN sudo usermod --append --groups dialout,video $USERNAME && \
         libgl1-mesa-dev \
         qt6-base-dev \
         libqt6serialport6 \
-        qt6-serialport-dev && \
+        qt6-serialport-dev \
+        ntp \
+        ntpdate && \
     sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 
 # ROS dependencies

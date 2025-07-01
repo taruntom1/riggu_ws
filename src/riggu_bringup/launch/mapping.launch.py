@@ -2,6 +2,7 @@ from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
+from launch_ros.actions import Node
 import os
 
 def generate_launch_description():
@@ -32,7 +33,17 @@ def generate_launch_description():
         )
     )
 
+    # RPLidar C1 node with custom configuration
+    rplidar_node = Node(
+        package='rplidar_ros',
+        executable='rplidar_node',
+        name='rplidar_node',
+        parameters=[os.path.join(riggu_bringup_dir, 'config', 'lidar', 'rplidar_c1_config.yaml')],
+        output='screen'
+    )
+
     return LaunchDescription([
         drivelink_launch,
         joy_to_cmdvel_launch,
+        rplidar_node,
     ])
