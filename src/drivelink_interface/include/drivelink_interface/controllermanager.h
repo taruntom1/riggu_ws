@@ -45,6 +45,7 @@ private:
     void setTimeSync(bool status);
     bool setControllerProperties();
     bool setWheelData();
+    bool setControlMode(int motor_id, ControlMode mode);
 
     bool retryOperation(const std::function<bool()> &operation, int maxRetries, int delayMs);
 
@@ -57,7 +58,7 @@ signals:
     void disconnectFromController();
     void sendControllerProperties(const controller_properties_t properties);
     void sendWheelData(int id, const wheel_data_t wheel_data);
-    // void sendControlMode(int motor_id, ControlMode mode);
+    void sendControlMode(int motor_id, ControlMode mode);
     // void sendOdometryBroadcastStatus(int motor_id, odo_broadcast_flags_t flags);
     // void sendPIDConstants(int motor_id, int type, pid_constants_t pid_constants);
 

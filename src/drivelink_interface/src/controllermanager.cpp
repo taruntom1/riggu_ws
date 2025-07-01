@@ -30,7 +30,32 @@ ControllerManager::ControllerManager(CommunicationInterface *commInterface,
 
 ControllerManager::~ControllerManager()
 {
-    // some code to gracefull shutdown of controller
+    RCLCPP_INFO(logger, "ControllerManager destructor called - beginning graceful shutdown");
+    
+    // Set all motors to OFF mode before destruction
+    if (commInterface && !controller_data.wheelData.empty()) {
+        RCLCPP_INFO(logger, "Setting all motors to OFF mode before shutdown");
+        
+        for (const wheel_data_t &wheel_data : controller_data.wheelData) {
+            RCLCPP_DEBUG(logger, "Setting motor %d to OFF mode", wheel_data.motor_id);
+            if (!setControlMode(wheel_data.motor_id, ControlMode::OFF)) {
+                RCLCPP_WARN(logger, "Failed to set motor %d to OFF mode during shutdown", wheel_data.motor_id);
+            }
+        }
+        
+        RCLCPP_INFO(logger, "All motors set to OFF mode");
+    }
+    
+    // Disable time synchronization
+    setTimeSync(false);
+    
+    // Disconnect from controller
+    if (commInterface) {
+        disconnectController();
+        RCLCPP_INFO(logger, "Disconnected from controller");
+    }
+    
+    RCLCPP_INFO(logger, "ControllerManager graceful shutdown completed");
 }
 
 void ControllerManager::manageQtConnections()
@@ -41,6 +66,7 @@ void ControllerManager::manageQtConnections()
 
     QObject::connect(this, &ControllerManager::sendControllerProperties, commInterface, &CommunicationInterface::sendControllerProperties);
     QObject::connect(this, &ControllerManager::sendWheelData, commInterface, &CommunicationInterface::sendWheelData);
+    QObject::connect(this, &ControllerManager::sendControlMode, commInterface, &CommunicationInterface::sendControlMode);
 
     // TimeSyncClient Connections
     QObject::connect(this, &ControllerManager::startTimesync, timeSyncClient, &TimeSyncClient::startSync, Qt::QueuedConnection);
@@ -257,6 +283,39 @@ bool ControllerManager::setWheelData()
     {
         RCLCPP_WARN(logger, "Some wheel data failed to send.");
     }
+
+    return success;
+}
+
+bool ControllerManager::setControlMode(int motor_id, ControlMode mode)
+{
+    bool success = false;
+    QEventLoop loop;
+
+    RCLCPP_INFO(logger, "Setting control mode for motor %d to %d", motor_id, static_cast<int>(mode));
+
+    auto onStatusChanged = [&](bool status, const QString &message)
+    {
+        success = status;
+        if (success)
+        {
+            RCLCPP_INFO(logger, "Control mode set successfully for motor %d: %s", motor_id, message.toStdString().c_str());
+        }
+        else
+        {
+            RCLCPP_ERROR(logger, "Failed to set control mode for motor %d: %s", motor_id, message.toStdString().c_str());
+        }
+        loop.quit();
+    };
+
+    QObject::connect(commInterface, &CommunicationInterface::propertySetUpdate, &loop, onStatusChanged);
+
+    emit sendControlMode(motor_id, mode);
+    RCLCPP_DEBUG(logger, "Waiting for control mode set confirmation...");
+
+    loop.exec();
+
+    QObject::disconnect(commInterface, &CommunicationInterface::propertySetUpdate, &loop, nullptr);
 
     return success;
 }
