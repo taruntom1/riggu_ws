@@ -31,7 +31,21 @@ RUN sudo usermod --append --groups dialout,video $USERNAME && \
         libqt6serialport6 \
         qt6-serialport-dev \
         ntp \
-        ntpdate && \
+        ntpdate \
+        gdb \
+        cmake \
+        ccache \
+        clang \
+        clang-format \
+        valgrind \
+        lcov \
+        gcovr \
+        pkg-config \
+        cppcheck \
+        ninja-build && \
+    sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
+
+RUN sudo apt install gdbserver -y && \
     sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 
 # ROS dependencies

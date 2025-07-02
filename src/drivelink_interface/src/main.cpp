@@ -68,13 +68,13 @@ int main(int argc, char *argv[])
     int ret = app.exec();
 
     // --- Cleanup ---
+
+    delete controllerManager;
     rosWorker->quit();
     rosWorker->wait();
 
     commThread->quit();
     commThread->wait();
-
-    delete controllerManager;
     delete timeSyncClient;
     delete commInterface;
     delete serialHandler;
