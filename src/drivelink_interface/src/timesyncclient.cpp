@@ -13,6 +13,7 @@ TimeSyncClient::TimeSyncClient(SerialHandler *serialHandler,
     connect(communicationInterface, &CommunicationInterface::timeSyncReplyReceived,
             this, &TimeSyncClient::readSyncReply, Qt::DirectConnection);
 
+    syncTimer.start(3000); // 3 seconds interval for time synchronization
     startSync();
 }
 
