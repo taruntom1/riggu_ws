@@ -34,16 +34,16 @@ def generate_launch_description():
     )
 
     # RPLidar C1 node with custom configuration
-    rplidar_node = Node(
-        package='rplidar_ros',
-        executable='rplidar_node',
-        name='rplidar_node',
-        parameters=[os.path.join(riggu_bringup_dir, 'config', 'lidar', 'rplidar_c1_config.yaml')],
-        output='screen'
-    )
+    # rplidar_node = Node(
+    #     package='rplidar_ros',
+    #     executable='rplidar_node',
+    #     name='rplidar_node',
+    #     parameters=[os.path.join(riggu_bringup_dir, 'config', 'lidar', 'rplidar_c1_config.yaml')],
+    #     output='screen'
+    # )
 
     return LaunchDescription([
         drivelink_launch,
         joy_to_cmdvel_launch,
-        rplidar_node,
+        # rplidar_node,
     ])
