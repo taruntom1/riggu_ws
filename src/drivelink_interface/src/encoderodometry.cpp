@@ -107,8 +107,8 @@ nav_msgs::msg::Odometry EncoderOdometry::getOdometryMsg() const
 
     nav_msgs::msg::Odometry odom;
 
-    odom.header.frame_id = "";
-    odom.child_frame_id = "";
+    odom.header.frame_id = "odom";
+    odom.child_frame_id = "base_link";
     odom.header.stamp = rclcpp::Time(last_timestamp_ + time_delta_ns_);
 
     odom.pose.pose.position.x = x_;

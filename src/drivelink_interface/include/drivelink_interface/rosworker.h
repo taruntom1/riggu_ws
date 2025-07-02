@@ -5,6 +5,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
 #include <nav_msgs/msg/odometry.hpp> // Include Odometry message
+#include <tf2_ros/transform_broadcaster.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
 
 class RosWorker : public QThread
 {
@@ -28,6 +30,7 @@ private:
     std::shared_ptr<rclcpp::Node> node_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr control_sub_;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_; // Odometry publisher
+    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_; // TF broadcaster
 
     void makeOdoPublisher();
     void makeControlSubscriber();
