@@ -12,6 +12,10 @@ RUN apt-get update && \
         ccache && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+ENV CMAKE_C_COMPILER_LAUNCHER=ccache
+ENV CMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+
 # Set up workspace
 WORKDIR /ros2_ws
 

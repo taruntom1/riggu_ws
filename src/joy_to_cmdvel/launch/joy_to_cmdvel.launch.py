@@ -25,8 +25,8 @@ def generate_launch_description():
             parameters=[{
                 'linear_axis': 1,       # Index of joystick axis for linear velocity (default: 1)
                 'angular_axis': 3,      # Index of joystick axis for angular velocity (default: 2)
-                'linear_scale': 0.05,    # Scaling factor for linear velocity
-                'angular_scale': 0.03    # Scaling factor for angular velocity
+                'linear_scale': 0.5,    # Scaling factor for linear velocity
+                'angular_scale': 0.3    # Scaling factor for angular velocity
             }]
         )
     ])

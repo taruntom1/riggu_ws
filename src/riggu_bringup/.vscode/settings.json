@@ -1,0 +1,12 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/riggu_ws/build/riggu_bringup",
+        "/riggu_ws/install/riggu_bringup/lib/python3.12/site-packages",
+        "/opt/ros/kilted/lib/python3.12/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/riggu_ws/build/riggu_bringup",
+        "/riggu_ws/install/riggu_bringup/lib/python3.12/site-packages",
+        "/opt/ros/kilted/lib/python3.12/site-packages"
+    ]
+}
