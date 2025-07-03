@@ -50,8 +50,8 @@ private:
 
     double left_wheel_radius_;
     double right_wheel_radius_;
-    RollingMeanAccumulator linear_accumulator_;
-    RollingMeanAccumulator angular_accumulator_;
+    RollingMeanAccumulator<double> linear_accumulator_;
+    RollingMeanAccumulator<double> angular_accumulator_;
     size_t rolling_window_size_ = 10;
     bool use_exact_integration_ = true;
 
