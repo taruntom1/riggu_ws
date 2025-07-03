@@ -48,9 +48,10 @@ int main(int argc, char *argv[])
 
     SerialConfig serial = parser.getSerialConfig();
     ControllerManager *controllerManager = new ControllerManager(commInterface, timeSyncClient, serial, rosWorker->getNode());
+    auto diff_config = parser.getDiffDriveConfig();
     diff_drive_config_t diff_drive_config;
-    diff_drive_config.setWheelRadius(1);
-    diff_drive_config.setWheelBase(1);
+    diff_drive_config.setWheelRadius(diff_config.wheel_radius);
+    diff_drive_config.setWheelBase(diff_config.wheel_base);
     DiffDrive *diffDrive = new DiffDrive(commInterface, rosWorker, timeSyncClient, diff_drive_config);
 
     // --- Graceful Shutdown Handling ---
