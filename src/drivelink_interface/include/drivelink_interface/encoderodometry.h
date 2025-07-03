@@ -13,11 +13,11 @@ struct encoder_odometry_config_t
     double left_wheel_radius;
     double right_wheel_radius;
     double wheel_base;
-    bool use_exact_integration;
-    int rolling_window_size;
+    bool use_exact_integration{true};
+    int rolling_window_size{10};
 
-    std::array<double, 36> pose_covariance;
-    std::array<double, 36> twist_covariance;
+    std::array<double, 36> pose_covariance{};
+    std::array<double, 36> twist_covariance{};
 };
 
 class EncoderOdometry
