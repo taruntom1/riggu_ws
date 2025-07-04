@@ -22,6 +22,7 @@ setup(
         (os.path.join('share', package_name, 'config', 'slam_toolbox'), glob('config/slam_toolbox/*')),
         (os.path.join('share', package_name, 'config', 'drivelink'), glob('config/drivelink/*')),
         (os.path.join('share', package_name, 'config', 'lidar'), glob('config/lidar/*')),
+        (os.path.join('share', package_name, 'config', 'joy_to_cmdvel'), glob('config/joy_to_cmdvel/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

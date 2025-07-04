@@ -1,12 +1,31 @@
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+from ament_index_python.packages import get_package_share_directory
+import os
 
 # This launch file starts the joy_to_cmdvel node, which converts joystick inputs to cmd_vel messages.
-# Parameters can be adjusted below to match your joystick configuration.
+# Parameters can be adjusted in the config file.
 # Optionally, you can also launch the joystick driver (joy_node) by uncommenting the relevant section.
 
 def generate_launch_description():
+    # Default config file path
+    default_config_path = os.path.join(
+        get_package_share_directory('joy_to_cmdvel'),
+        'config',
+        'joy_to_cmdvel_config.yaml'
+    )
+    
+    # Declare launch argument for config file path
+    config_file_arg = DeclareLaunchArgument(
+        'config_file',
+        default_value=default_config_path,
+        description='Path to the joy_to_cmdvel configuration file'
+    )
     return LaunchDescription([
+        config_file_arg,
+        
         # Launch the joy node (joystick driver)
         # Uncomment the following block to launch the joystick driver together with joy_to_cmdvel
         Node(
@@ -22,11 +41,6 @@ def generate_launch_description():
             executable='joy_to_cmdvel_node',
             name='joy_to_cmdvel_node',
             output='screen',
-            parameters=[{
-                'linear_axis': 1,       # Index of joystick axis for linear velocity (default: 1)
-                'angular_axis': 3,      # Index of joystick axis for angular velocity (default: 2)
-                'linear_scale': 0.5,    # Scaling factor for linear velocity
-                'angular_scale': 0.3    # Scaling factor for angular velocity
-            }]
+            parameters=[LaunchConfiguration('config_file')]
         )
     ])
