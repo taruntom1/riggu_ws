@@ -51,6 +51,9 @@ RUN sudo usermod --append --groups dialout,video $USERNAME && \
         cppcheck && \
     sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 
+RUN sudo apt update && sudo apt install ros-kilted-slam-toolbox -y && \
+    sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
+
 # ROS dependencies and shell configuration
 RUN rosdep update && \
     echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc && \
