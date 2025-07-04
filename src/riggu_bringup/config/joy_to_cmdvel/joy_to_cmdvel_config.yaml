@@ -2,5 +2,5 @@ joy_to_cmdvel_node:
   ros__parameters:
     linear_axis: 1        # Index of joystick axis for linear velocity
     angular_axis: 3       # Index of joystick axis for angular velocity
-    linear_scale: 0.5     # Scaling factor for linear velocity
-    angular_scale: 0.3    # Scaling factor for angular velocity
+    linear_scale: 0.16     # Scaling factor for linear velocity
+    angular_scale: 0.8    # Scaling factor for angular velocity
