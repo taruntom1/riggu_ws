@@ -36,35 +36,8 @@ def generate_launch_description():
         }.items()
     )
 
-    # RPLidar C1 node with custom configuration
-    rplidar_node = Node(
-        package='rplidar_ros',
-        executable='rplidar_node',
-        name='rplidar_node',
-        parameters=[os.path.join(riggu_bringup_dir, 'config', 'lidar', 'rplidar_c1_config.yaml')],
-        output='screen'
-    )
-
-    # SLAM Toolbox launch for asynchronous online mapping
-    slam_toolbox_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                riggu_bringup_dir,
-                'launch',
-                'slam_toolbox',
-                'online_async_launch.py'
-            )
-        ),
-        launch_arguments={
-            'slam_params_file': os.path.join(riggu_bringup_dir, 'config', 'slam_toolbox', 'mapper_params_online_async.yaml'),
-            'use_sim_time': 'false',
-            'autostart': 'true',
-        }.items()
-    )
 
     return LaunchDescription([
         drivelink_launch,
         joy_to_cmdvel_launch,
-        rplidar_node,
-        slam_toolbox_launch,
     ])
