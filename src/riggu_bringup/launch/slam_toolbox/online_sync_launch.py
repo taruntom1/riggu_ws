@@ -33,8 +33,8 @@ def generate_launch_description():
         description='Use simulation/Gazebo clock')
     declare_slam_params_file_cmd = DeclareLaunchArgument(
         'slam_params_file',
-        default_value=os.path.join(get_package_share_directory("slam_toolbox"),
-                                   'config', 'mapper_params_online_sync.yaml'),
+        default_value=os.path.join(get_package_share_directory("riggu_bringup"),
+                                   'config','slam_toolbox','mapper_params_online_sync.yaml'),
         description='Full path to the ROS2 parameters file to use for the slam_toolbox node')
 
     start_sync_slam_toolbox_node = LifecycleNode(

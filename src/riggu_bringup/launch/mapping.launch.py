@@ -26,13 +26,13 @@ def generate_launch_description():
     joy_to_cmdvel_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
-                get_package_share_directory('joy_to_cmdvel'),
+                riggu_bringup_dir,
                 'launch',
-                'joy_to_cmdvel.launch.py'
+                'joy.launch.py'
             )
         ),
         launch_arguments={
-            'config_file': os.path.join(riggu_bringup_dir, 'config', 'joy_to_cmdvel', 'joy_to_cmdvel_config.yaml'),
+            'use_sim_time': 'false',
         }.items()
     )
 

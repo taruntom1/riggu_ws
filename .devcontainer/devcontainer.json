@@ -26,5 +26,6 @@
         "ms-iot.vscode-ros"
       ]
     }
-  }
+  },
+  "postStartCommand": "/start_zenoh.sh"
 }

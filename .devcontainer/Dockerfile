@@ -54,11 +54,20 @@ RUN sudo usermod --append --groups dialout,video $USERNAME && \
 RUN sudo apt update && sudo apt install ros-kilted-slam-toolbox -y && \
     sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 
+RUN sudo apt update && sudo apt install ros-kilted-navigation2 \
+    ros-kilted-nav2-bringup ros-kilted-twist-mux -y && \
+    sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
+
+RUN sudo apt update && sudo apt install -y tmux &&\
+    sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
+
 # ROS dependencies and shell configuration
 RUN rosdep update && \
     echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc && \
     echo "source install/setup.bash" >> ~/.bashrc
 
+COPY start_zenoh.sh start_zenoh.sh
+RUN sudo chmod +x start_zenoh.sh
 # Set environment variables for ROS and compilation optimization
 ENV RMW_IMPLEMENTATION=rmw_zenoh_cpp \
     CMAKE_C_COMPILER_LAUNCHER=ccache \
