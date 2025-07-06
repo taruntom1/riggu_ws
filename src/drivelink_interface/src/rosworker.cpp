@@ -28,8 +28,8 @@ void RosWorker::makeOdoPublisher()
 
 void RosWorker::makeControlSubscriber()
 {
-    control_sub_ = node_->create_subscription<geometry_msgs::msg::Twist>(
-        "/cmd_vel", 10,
+    control_sub_ = node_->create_subscription<geometry_msgs::msg::TwistStamped>(
+        "/diff_drive/cmd_vel", 10,
         std::bind(&RosWorker::cmdVelCallback, this, std::placeholders::_1));
 }
 
@@ -60,7 +60,7 @@ void RosWorker::publishOdometry(nav_msgs::msg::Odometry odom_msg)
     }
 }
 
-void RosWorker::cmdVelCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
+void RosWorker::cmdVelCallback(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {
     emit commandVelReceived(*msg);
 }

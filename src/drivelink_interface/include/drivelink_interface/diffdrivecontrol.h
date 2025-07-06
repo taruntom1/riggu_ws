@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <geometry_msgs/msg/twist.hpp>
+#include "geometry_msgs/msg/twist_stamped.hpp"
 
 #include "structs.h"
 
@@ -35,7 +36,7 @@ public slots:
      *                 (linear.x = forward velocity [m/s],
      *                  angular.z = yaw rate [rad/s])
      */
-    void onVelocityCommand(geometry_msgs::msg::Twist cmd_vel);
+    void onVelocityCommand(geometry_msgs::msg::TwistStamped cmd_vel);
 
 signals:
     /**
