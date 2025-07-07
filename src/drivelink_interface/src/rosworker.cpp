@@ -6,6 +6,7 @@ RosWorker::RosWorker(QObject *parent)
 {
     makeOdoPublisher();
     makeControlSubscriber();
+    makeJointStatePublisher();
 
     // Initialize TF broadcaster
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*node_);
@@ -14,6 +15,14 @@ RosWorker::RosWorker(QObject *parent)
 std::shared_ptr<rclcpp::Node> RosWorker::getNode() const
 {
     return node_;
+}
+
+void RosWorker::publishWheelJointState(sensor_msgs::msg::JointState joint_state_msg)
+{
+    if (joint_state_pub_ && rclcpp::ok())
+    {
+        joint_state_pub_->publish(joint_state_msg);
+    }
 }
 
 void RosWorker::run()
@@ -33,6 +42,11 @@ void RosWorker::makeControlSubscriber()
         std::bind(&RosWorker::cmdVelCallback, this, std::placeholders::_1));
 }
 
+void RosWorker::makeJointStatePublisher()
+{
+    joint_state_pub_ = node_->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
+}
+
 void RosWorker::publishOdometry(nav_msgs::msg::Odometry odom_msg)
 {
 
@@ -41,24 +55,31 @@ void RosWorker::publishOdometry(nav_msgs::msg::Odometry odom_msg)
         odom_pub_->publish(odom_msg);
 
         // Broadcast the transform
-        geometry_msgs::msg::TransformStamped transform_stamped;
-
-        transform_stamped.header.stamp = odom_msg.header.stamp;
-        transform_stamped.header.frame_id = "odom";
-        transform_stamped.child_frame_id = "base_link";
-
-        // Copy position from odometry message
-        transform_stamped.transform.translation.x = odom_msg.pose.pose.position.x;
-        transform_stamped.transform.translation.y = odom_msg.pose.pose.position.y;
-        transform_stamped.transform.translation.z = odom_msg.pose.pose.position.z;
-
-        // Copy rotation from odometry message
-        transform_stamped.transform.rotation = odom_msg.pose.pose.orientation;
-
-        // Broadcast the transform
-        tf_broadcaster_->sendTransform(transform_stamped);
+        publishTransform(odom_msg);
     }
 }
+
+void RosWorker::publishTransform(nav_msgs::msg::Odometry &odom_msg)
+{
+    geometry_msgs::msg::TransformStamped transform_stamped;
+
+    transform_stamped.header.stamp = odom_msg.header.stamp;
+    transform_stamped.header.frame_id = "odom";
+    transform_stamped.child_frame_id = "base_link";
+
+    // Copy position from odometry message
+    transform_stamped.transform.translation.x = odom_msg.pose.pose.position.x;
+    transform_stamped.transform.translation.y = odom_msg.pose.pose.position.y;
+    transform_stamped.transform.translation.z = odom_msg.pose.pose.position.z;
+
+    // Copy rotation from odometry message
+    transform_stamped.transform.rotation = odom_msg.pose.pose.orientation;
+
+    // Broadcast the transform
+    tf_broadcaster_->sendTransform(transform_stamped);
+}
+
+
 
 void RosWorker::cmdVelCallback(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {

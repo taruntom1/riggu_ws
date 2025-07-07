@@ -36,4 +36,5 @@ private:
 
 signals:
     void publishEncoderOdometry(nav_msgs::msg::Odometry odom_msg);
+    void publishWheelJointState(sensor_msgs::msg::JointState joint_state_msg);
 };

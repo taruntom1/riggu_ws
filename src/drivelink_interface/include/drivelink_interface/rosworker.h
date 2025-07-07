@@ -8,6 +8,7 @@
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include "geometry_msgs/msg/twist_stamped.hpp"
+#include <sensor_msgs/msg/joint_state.hpp>
 
 class RosWorker : public QThread
 {
@@ -20,6 +21,7 @@ public:
 public slots:
 
     void publishOdometry(nav_msgs::msg::Odometry odom_msg);
+    void publishWheelJointState(sensor_msgs::msg::JointState joint_state_msg);
 
 signals:
     void commandVelReceived(geometry_msgs::msg::TwistStamped cmd_vel);
@@ -31,10 +33,13 @@ private:
     std::shared_ptr<rclcpp::Node> node_;
     rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr control_sub_;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_; // Odometry publisher
+    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_; // Joint state publisher
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_; // TF broadcaster
 
     void makeOdoPublisher();
     void makeControlSubscriber();
+    void makeJointStatePublisher();
 
     void cmdVelCallback(const geometry_msgs::msg::TwistStamped::SharedPtr msg);
+    void publishTransform(nav_msgs::msg::Odometry &odom_msg);
 };

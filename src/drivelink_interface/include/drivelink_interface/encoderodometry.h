@@ -7,6 +7,7 @@
 #include <vector>
 #include "structs.h"
 #include "RollingMeanAccumulator.h"
+#include <sensor_msgs/msg/joint_state.hpp>
 
 struct encoder_odometry_config_t
 {
@@ -39,6 +40,10 @@ public:
     void resetPose(double x, double y, double theta);
     void resetAccumulators();
     void updateFromVelocity(double linear, double angular, int64_t timestamp_ns);
+
+    sensor_msgs::msg::JointState getJointStateMsg() const;
+
+    std::pair<double, double> getJointState() const;
 
     nav_msgs::msg::Odometry getOdometryMsg() const;
 

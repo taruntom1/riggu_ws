@@ -4,6 +4,7 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
+
 EncoderOdometry::EncoderOdometry(const encoder_odometry_config_t &config)
     : last_left_angle_(0.0), last_right_angle_(0.0), last_timestamp_(-1.0),
       x_(0.0), y_(0.0), theta_(0.0), v_x_(0.0), omega_z_(0.0),
@@ -157,4 +158,15 @@ void EncoderOdometry::updateFromVelocity(double linear, double angular, int64_t 
     v_x_ = linear;
     omega_z_ = angular;
     last_timestamp_ = timestamp_ns;
+}
+
+sensor_msgs::msg::JointState EncoderOdometry::getJointStateMsg() const
+{
+    sensor_msgs::msg::JointState joint_state;
+    joint_state.header.stamp = rclcpp::Time(last_timestamp_ + time_delta_ns_);
+    joint_state.name = {"left_wheel_joint", "right_wheel_joint"};
+    joint_state.position = {last_left_angle_, last_right_angle_};
+    joint_state.velocity = {v_x_, v_x_}; // If you have per-wheel velocity, use them instead
+    joint_state.effort = {0.0, 0.0}; // Update if you have effort data
+    return joint_state;
 }

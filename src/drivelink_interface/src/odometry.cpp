@@ -10,6 +10,7 @@ void Odometry::updateEncoderOdometry(std::pair<timestamp_t, std::vector<odometry
 {
     encoderOdometry_.update(odometry);
     emit publishEncoderOdometry(encoderOdometry_.getOdometryMsg());
+    emit publishWheelJointState(encoderOdometry_.getJointStateMsg());
 }
 
 void Odometry::resetPose(double x, double y, double theta)
