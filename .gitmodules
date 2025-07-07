@@ -1,3 +1,12 @@
 [submodule "src/rplidar_ros"]
 	path = src/rplidar_ros
 	url = https://github.com/Slamtec/rplidar_ros.git
+[submodule "src/riggu_description"]
+	path = src/riggu_description
+	url = https://github.com/taruntom1/riggu_description.git
+[submodule "src/twist_stamper"]
+	path = src/twist_stamper
+	url = https://github.com/taruntom1/twist_stamper.git
+[submodule "src/drivelink_ros_interface"]
+	path = src/drivelink_ros_interface
+	url = https://github.com/taruntom1/drivelink_ros_interface.git
