@@ -22,13 +22,6 @@ def generate_launch_description():
         }.items()
     )
 
-    joy_to_cmdvel_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(riggu_bringup_dir, 'launch', 'joy.launch.py')
-        ),
-        launch_arguments={'use_sim_time': 'false'}.items()
-    )
-
     rplidar_node = Node(
         package='rplidar_ros',
         executable='rplidar_node',
@@ -39,6 +32,5 @@ def generate_launch_description():
 
     return LaunchDescription([
         drivelink_launch,
-        joy_to_cmdvel_launch,
         rplidar_node
     ])

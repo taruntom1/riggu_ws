@@ -15,6 +15,7 @@ setup(
         # Include all launch files
         (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
         (os.path.join('share', package_name, 'launch', 'slam_toolbox'), glob('launch/slam_toolbox/*_launch.py')),
+        (os.path.join('share', package_name, 'launch', 'helpers'), glob('launch/helpers/*.launch.py')),
         # Include all world files
         (os.path.join('share', package_name, 'worlds'), glob('worlds/*')),
         # Include all config files
