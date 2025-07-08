@@ -5,7 +5,8 @@
     "--privileged",
     "--network=host",
     "--device=/dev/ttyUSB0",
-    "--device=/dev/video0"
+    "--device=/dev/video0",
+    "--gpus=all"
   ],
   "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind",
   "workspaceFolder": "/${localWorkspaceFolderBasename}",
@@ -17,13 +18,11 @@
     "vscode": {
       "extensions": [
         "ms-vscode.cpptools-extension-pack",
-        "ms-vscode.cpptools-themes",
-        "ms-vscode.cmake-tools",
-        "ms-vscode.cpptools",
+        "visualstudioexptteam.vscodeintellicode",
         "ms-python.python",
         "ms-python.debugpy",
         "ms-python.vscode-pylance",
-        "ms-iot.vscode-ros"
+        "ranch-hand-robotics.rde-pack"
       ]
     }
   },

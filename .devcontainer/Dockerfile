@@ -19,7 +19,7 @@ RUN if ! id -u $USER_UID >/dev/null 2>&1; then \
 # Switch to non-root user
 USER $USERNAME
 
-# Install system dependencies and development tools in a single optimized layer
+# Install all system dependencies and development tools in a single optimized layer
 RUN sudo usermod --append --groups dialout,video $USERNAME && \
     sudo apt-get update && \
     sudo apt-get upgrade -y && \
@@ -48,17 +48,14 @@ RUN sudo usermod --append --groups dialout,video $USERNAME && \
         # Testing and coverage tools
         lcov \
         gcovr \
-        cppcheck && \
-    sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
-
-RUN sudo apt update && sudo apt install ros-kilted-slam-toolbox -y && \
-    sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
-
-RUN sudo apt update && sudo apt install ros-kilted-navigation2 \
-    ros-kilted-nav2-bringup ros-kilted-twist-mux -y && \
-    sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
-
-RUN sudo apt update && sudo apt install -y tmux &&\
+        cppcheck \
+        # ROS packages
+        ros-kilted-slam-toolbox \
+        ros-kilted-navigation2 \
+        ros-kilted-nav2-bringup \
+        ros-kilted-twist-mux \
+        # Utilities
+        tmux && \
     sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 
 # ROS dependencies and shell configuration
