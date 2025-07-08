@@ -4,7 +4,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 
 
@@ -25,6 +25,14 @@ def generate_launch_description():
         description='World to load'
     )
 
+    # Launch argument for headless mode (no GUI)
+    headless = LaunchConfiguration('headless')
+    headless_arg = DeclareLaunchArgument(
+        'headless',
+        default_value='false',
+        description='Run Gazebo in headless mode (no GUI)'
+    )
+
     # Launch Gazebo simulator with the specified world
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -35,7 +43,9 @@ def generate_launch_description():
             )
         ]),
         launch_arguments={
-            'gz_args': ['-r -v4 ', world],
+            'gz_args': PythonExpression([
+                "'-r -v4 -s ' + '", world, "' if '", headless, "' == 'true' else '-r -v4 ' + '", world, "'"
+            ]),
             'on_exit_shutdown': 'true'
         }.items()
     )
@@ -78,6 +88,7 @@ def generate_launch_description():
     # Return the complete launch description
     return LaunchDescription([
         world_arg,
+        headless_arg,
         gazebo,
         spawn_entity,
         ros_gz_bridge,

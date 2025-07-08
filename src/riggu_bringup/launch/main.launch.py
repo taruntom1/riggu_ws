@@ -20,6 +20,12 @@ def generate_launch_description():
         default_value='true',
         description='Whether to launch Nav2 (true/false)'
     )
+    
+    headless_arg = DeclareLaunchArgument(
+        'headless',
+        default_value='false',
+        description='Run Gazebo in headless mode (no GUI) when using simulation'
+    )
 
     # Get package share directory
     riggu_bringup_dir = get_package_share_directory('riggu_bringup')
@@ -70,12 +76,16 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(riggu_bringup_dir, 'launch', 'helpers', 'launch_sim.launch.py')
         ),
+        launch_arguments={
+            'headless': LaunchConfiguration('headless')
+        }.items(),
         condition=IfCondition(LaunchConfiguration('use_sim'))
     )
 
     return LaunchDescription([
         use_sim_arg,
         launch_nav2_arg,
+        headless_arg,
         hardware_launch,
         joy_launch,
         nav2_slam_launch,

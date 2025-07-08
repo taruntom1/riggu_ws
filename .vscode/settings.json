@@ -114,5 +114,6 @@
         "qtimer": "cpp",
         "qstring": "cpp"
     },
-    "cmake.ignoreCMakeListsMissing": true
+    "cmake.ignoreCMakeListsMissing": true,
+    "ros.distro": "kilted"
 }
