@@ -3,7 +3,7 @@ rplidar_node:
     channel_type: "serial"
     serial_port: "/dev/ttyUSB1"
     serial_baudrate: 460800
-    frame_id: "laser"
+    frame_id: "laser_frame"
     inverted: false
     angle_compensate: true
     scan_mode: "Standard"
