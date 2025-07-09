@@ -1,6 +1,6 @@
 serial_config:
   baud: 576000
-  port: ttyUSB0
+  port: drivelink
 
 diff_drive_config:
   wheel_radius: 0.06675
