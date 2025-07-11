@@ -63,6 +63,8 @@ RUN rosdep update && \
     echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc && \
     echo "source install/setup.bash" >> ~/.bashrc
 
+RUN sudo apt update && sudo apt install -y ros-kilted-foxglove-bridge
+
 COPY start_zenoh.sh start_zenoh.sh
 RUN sudo chmod +x start_zenoh.sh
 # Set environment variables for ROS and compilation optimization

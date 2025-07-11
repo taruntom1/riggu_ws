@@ -22,7 +22,8 @@
         "ms-python.python",
         "ms-python.debugpy",
         "ms-python.vscode-pylance",
-        "ranch-hand-robotics.rde-pack"
+        "ranch-hand-robotics.rde-pack",
+        "yzhang.markdown-all-in-one"
       ]
     }
   },
