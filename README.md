@@ -42,7 +42,23 @@ If you prefer to install dependencies locally:
 - rmw_zenoh_cpp (Zenoh middleware)
 
 ### Build the Workspace
+
+#### Option A: Automated Setup (Recommended for New Contributors)
 ```bash
+# Clone the repository with submodules
+git clone --recursive https://github.com/your-org/riggu_ws.git
+cd riggu_ws
+
+# Run the setup script
+./setup_workspace.sh
+```
+
+#### Option B: Manual Setup
+```bash
+# Initialize submodules (if not cloned with --recursive)
+git submodule update --init --recursive
+
+# Build manually
 source /opt/ros/kilted/setup.bash
 colcon build
 source install/setup.bash
@@ -122,6 +138,7 @@ ros2 run rmw_zenoh_cpp rmw_zenohd
 
 For detailed information about each component:
 
+- [Git Submodules Guide](docs/git_submodules_guide.md) - Managing submodules and contributing
 - [Riggu Bringup Package](docs/riggu_bringup.md) - Main launch and configuration
 - [Launch System](docs/launch_system.md) - Detailed launch file documentation
 - [Configuration Guide](docs/configuration.md) - Parameter configuration

@@ -1,3 +1,17 @@
+# Git Submodules
+## Initial setup
+    git clone --recursive https://github.com/your-org/riggu_ws.git
+    # OR if already cloned
+    git submodule update --init --recursive
+
+## Update submodules
+    git submodule update --recursive
+    git submodule update --remote --recursive
+
+## Check submodule status
+    git submodule status
+    git submodule foreach git status
+
 # router start
     -   ros2 run rmw_zenoh_cpp rmw_zenohd
 # remote zenoh router
