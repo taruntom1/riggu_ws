@@ -1,6 +1,6 @@
 {
   "name": "Riggu Control",
-  "dockerFile": "Dockerfile",
+  "image": "taruntom/riggu_devcontainer",
   "runArgs": [
     "--privileged",
     "--network=host",
