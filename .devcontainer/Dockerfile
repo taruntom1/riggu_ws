@@ -1,3 +1,4 @@
+
 FROM osrf/ros:kilted-desktop-full
 
 # User setup arguments
@@ -58,15 +59,20 @@ RUN sudo usermod --append --groups dialout,video $USERNAME && \
         tmux && \
     sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 
+# Install additional ROS package in a separate layer
+RUN sudo apt-get update && \
+    sudo apt-get install --no-install-recommends -y ros-kilted-foxglove-bridge && \
+    sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
+
 # ROS dependencies and shell configuration
 RUN rosdep update && \
     echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc && \
     echo "source install/setup.bash" >> ~/.bashrc
 
-RUN sudo apt update && sudo apt install -y ros-kilted-foxglove-bridge
-
+# Copy and set permissions for zenoh script
 COPY start_zenoh.sh start_zenoh.sh
 RUN sudo chmod +x start_zenoh.sh
+
 # Set environment variables for ROS and compilation optimization
 ENV RMW_IMPLEMENTATION=rmw_zenoh_cpp \
     CMAKE_C_COMPILER_LAUNCHER=ccache \
