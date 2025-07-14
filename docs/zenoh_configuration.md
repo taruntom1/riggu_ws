@@ -36,13 +36,11 @@ ros2 run rmw_implementation_cmake check_rmw_implementation.py
 ## 🚀 Quick Setup
 
 ### Scenario 1: Robot with Auto-Start (Recommended)
-The Zenoh router automatically starts on the robot when booted.
+The Zenoh router automatically starts on the robot when booted. Change
+the ip address (ZENOH_ENDPOINT) in start_zenoh.sh script to the ip of Riggu
 
 **On Development Machine**:
 ```bash
-# Connect to robot's Zenoh router (replace IP)
-export ZENOH_CONFIG_OVERRIDE='connect/endpoints=["tcp/ROBOT_IP:7447"]'
-
 # Launch your ROS2 nodes
 ros2 launch riggu_bringup main.launch.py
 ```
@@ -51,15 +49,15 @@ ros2 launch riggu_bringup main.launch.py
 
 **On Robot**:
 ```bash
+# Connect to robot's router
+export ZENOH_CONFIG_OVERRIDE='connect/endpoints=["tcp/ROBOT_IP:7447"]'
+
 # Start Zenoh router
 ros2 run rmw_zenoh_cpp rmw_zenohd
 ```
 
 **On Control Station**:
 ```bash
-# Connect to robot's router
-export ZENOH_CONFIG_OVERRIDE='connect/endpoints=["tcp/ROBOT_IP:7447"]'
-
 # Or start local router and connect
 ros2 run rmw_zenoh_cpp rmw_zenohd
 ```
