@@ -13,6 +13,8 @@ This repository includes a fully configured dev container that provides all nece
    - Docker Desktop or Docker Engine
    - Visual Studio Code
    - [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+   - `.ccache` folder in your home directory (for ccache to be enabled)
+   - Container toolkit for your respective GPU (for GPU acceleration to work)
 
 2. **Open in Dev Container**:
    - Clone this repository
