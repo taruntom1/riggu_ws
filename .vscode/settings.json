@@ -115,5 +115,6 @@
         "qstring": "cpp"
     },
     "cmake.ignoreCMakeListsMissing": true,
-    "ros.distro": "kilted"
+    "ros.distro": "kilted",
+    "ROS2.distro": "kilted"
 }

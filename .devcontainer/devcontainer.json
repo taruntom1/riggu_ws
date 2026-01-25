@@ -6,8 +6,13 @@
     "--network=host",
     "--device=/dev/ttyUSB0",
     "--device=/dev/video0",
-    "--gpus=all"
+    
   ],
+  "containerEnv": {
+    // Remove software rendering, use actual GPU
+    "LIBGL_ALWAYS_SOFTWARE":"1"  // Remove this line
+    //"ROC_ENABLE_PRE_VEGA": "1"  // Enable older AMD GPU support if needed
+  },
   "workspaceMount": "source=${localWorkspaceFolder},target=/${localWorkspaceFolderBasename},type=bind",
   "workspaceFolder": "/${localWorkspaceFolderBasename}",
   "mounts": [
