@@ -21,7 +21,7 @@ This repository includes a fully configured dev container that provides all nece
    - The container will automatically build and configure the environment
 
 3. **Features Included**:
-   - ROS2 Kilted Kaiju
+   - ROS2 Jazzy Jalisco
    - Ubuntu 24.04 LTS base
    - Gazebo Sim (for simulation)
    - Nav2 stack
@@ -59,7 +59,7 @@ cd riggu_ws
 git submodule update --init --recursive
 
 # Build manually
-source /opt/ros/kilted/setup.bash
+source /opt/ros/jazzy/setup.bash
 colcon build
 source install/setup.bash
 ```
@@ -158,7 +158,7 @@ For detailed information about each component:
 ### Dev Container Features
 This repository includes a comprehensive dev container configuration that provides:
 
-- **Base Environment**: Ubuntu 24.04 LTS with ROS2 Kilted Kaiju
+- **Base Environment**: Ubuntu 24.04 LTS with ROS2 Jazzy Jalisco
 - **Hardware Access**: USB devices (`/dev/ttyUSB0`) and cameras (`/dev/video0`)
 - **GPU Support**: NVIDIA GPU acceleration for Gazebo simulation
 - **Networking**: Host network access for robot communication
@@ -221,4 +221,4 @@ Then rebuild the container: `Ctrl+Shift+P` → "Dev Containers: Rebuild Containe
 
 - **Maintainer**: tarun (taruntom1@gmail.com)
 - **License**: TODO: License declaration
-- **ROS2 Distribution**: Kilted Kaiju
+- **ROS2 Distribution**: Jazzy Jalisco

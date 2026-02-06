@@ -4,7 +4,7 @@
     {
       "label": "build",
       "type": "shell",
-      "command": "source /opt/ros/kilted/setup.bash && colcon build --packages-select drivelink_interface --cmake-args -DCMAKE_BUILD_TYPE=Debug",
+      "command": "source /opt/ros/jazzy/setup.bash && colcon build --packages-select drivelink_interface --cmake-args -DCMAKE_BUILD_TYPE=Debug",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -13,7 +13,7 @@
     {
       "label": "build for ARM",
       "type": "shell",
-      "command": "source /opt/ros/kilted/setup.bash && colcon build --packages-select drivelink_interface --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake",
+      "command": "source /opt/ros/jazzy/setup.bash && colcon build --packages-select drivelink_interface --cmake-args -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -22,7 +22,7 @@
     {
       "label": "Build drivelink_interface",
       "type": "shell",
-      "command": "source /opt/ros/kilted/setup.bash && colcon build --packages-select drivelink_interface --cmake-args -DCMAKE_BUILD_TYPE=Release",
+      "command": "source /opt/ros/jazzy/setup.bash && colcon build --packages-select drivelink_interface --cmake-args -DCMAKE_BUILD_TYPE=Release",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -34,7 +34,7 @@
       "command": "bash",
       "args": [
         "-c",
-        "source /opt/ros/kilted/setup.bash && cd ~/ros2_ws && colcon build --packages-select drivelink_interface && source install/setup.bash && ros2 launch drivelink_interface drivelink_interface_node.launch.py"
+        "source /opt/ros/jazzy/setup.bash && cd ~/ros2_ws && colcon build --packages-select drivelink_interface && source install/setup.bash && ros2 launch drivelink_interface drivelink_interface_node.launch.py"
       ],
       "group": {
         "kind": "build",
@@ -59,7 +59,7 @@
     {
       "label": "Build joy_to_cmdvel",
       "type": "shell",
-      "command": "source /opt/ros/kilted/setup.bash && colcon build --packages-select joy_to_cmdvel --cmake-args -DCMAKE_BUILD_TYPE=Debug",
+      "command": "source /opt/ros/jazzy/setup.bash && colcon build --packages-select joy_to_cmdvel --cmake-args -DCMAKE_BUILD_TYPE=Debug",
       "options": {
         "cwd": "${workspaceFolder}"
       },
@@ -71,7 +71,7 @@
       "command": "bash",
       "args": [
         "-c",
-        "source /opt/ros/kilted/setup.bash && cd ~/ros2_ws && source install/setup.bash && ros2 launch joy_to_cmdvel joy_to_cmdvel.launch.py"
+        "source /opt/ros/jazzy/setup.bash && cd ~/ros2_ws && source install/setup.bash && ros2 launch joy_to_cmdvel joy_to_cmdvel.launch.py"
       ],
       "problemMatcher": [],
       "group": {

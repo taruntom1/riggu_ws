@@ -1,5 +1,5 @@
 
-FROM osrf/ros:kilted-desktop-full
+FROM osrf/ros:jazzy-desktop-full
 
 # User setup arguments
 ARG USERNAME=ubuntu
@@ -50,18 +50,20 @@ RUN sudo usermod --append --groups dialout,video $USERNAME && \
         lcov \
         gcovr \
         cppcheck \
+        # ROS RMW implementations
+        ros-jazzy-rmw-zenoh-cpp \
         # ROS packages
-        ros-kilted-slam-toolbox \
-        ros-kilted-navigation2 \
-        ros-kilted-nav2-bringup \
-        ros-kilted-twist-mux \
+        ros-jazzy-slam-toolbox \
+        ros-jazzy-navigation2 \
+        ros-jazzy-nav2-bringup \
+        ros-jazzy-twist-mux \
         # Utilities
         tmux && \
     sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 
 # Install additional ROS package in a separate layer
 RUN sudo apt-get update && \
-    sudo apt-get install --no-install-recommends -y ros-kilted-foxglove-bridge && \
+    sudo apt-get install --no-install-recommends -y ros-jazzy-foxglove-bridge && \
     sudo apt-get clean && sudo rm -rf /var/lib/apt/lists/*
 
 # ROS dependencies and shell configuration

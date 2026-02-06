@@ -24,8 +24,8 @@ git submodule status
 
 # Source ROS2 and build the workspace
 echo "🔨 Building the workspace..."
-if [ -f "/opt/ros/kilted/setup.bash" ]; then
-    source /opt/ros/kilted/setup.bash
+if [ -f "/opt/ros/jazzy/setup.bash" ]; then
+    source /opt/ros/jazzy/setup.bash
     
     # Check for missing dependencies
     echo "🔍 Checking for missing dependencies..."
@@ -55,8 +55,8 @@ if [ -f "/opt/ros/kilted/setup.bash" ]; then
     echo "   - Update submodules: git submodule update --recursive"
     
 else
-    echo "⚠️  ROS2 Kilted not found at /opt/ros/kilted/setup.bash"
-    echo "   Please install ROS2 Kilted or use the dev container"
+    echo "⚠️  ROS2 jazzy not found at /opt/ros/jazzy/setup.bash"
+    echo "   Please install ROS2 jazzy or use the dev container"
     echo "   Submodules have been initialized, but workspace not built"
     exit 1
 fi

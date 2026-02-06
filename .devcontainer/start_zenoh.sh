@@ -5,7 +5,7 @@ set -euo pipefail  # Exit on error, undefined variables, and pipe failures
 # Configuration
 ZENOH_SESSION_NAME="${ZENOH_SESSION_NAME:-zenoh_router}"
 ZENOH_ENDPOINT="${ZENOH_ENDPOINT:-tcp/100.107.192.97:7447}"
-ROS_SETUP_SCRIPT="${ROS_SETUP_SCRIPT:-/opt/ros/kilted/setup.bash}"
+ROS_SETUP_SCRIPT="${ROS_SETUP_SCRIPT:-/opt/ros/jazzy/setup.bash}"
 
 # Colors for output
 RED='\033[0;31m'
