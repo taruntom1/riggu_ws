@@ -147,6 +147,15 @@ sudo udevadm trigger
 
 Motor controller-specific parameters (content depends on hardware).
 
+### Acknowledgement Callback
+
+The `CommunicationInterface` class provides an `acknowledgementReceived(bool success)` Qt signal that is emitted whenever the firmware sends a `READ_SUCCESS` or `READ_FAILURE` response. Upper layers (such as `DiffDrive`) can connect to this signal to be notified of acknowledgement status.
+
+- The `DiffDrive` class connects to this signal and re-emits it via its own `acknowledgementReceived(bool success)` signal, allowing any component above it to monitor acknowledgement status.
+- `success` is `true` when the firmware acknowledges with `READ_SUCCESS`, and `false` for `READ_FAILURE`.
+
+See the [drivelink_ros_interface CONFIG_USAGE.md](../src/drivelink_ros_interface/CONFIG_USAGE.md) for detailed usage examples.
+
 ## 📡 LIDAR Configuration
 
 ### File: `lidar/rplidar_c1_config.yaml`
