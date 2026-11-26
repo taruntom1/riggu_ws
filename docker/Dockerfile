@@ -35,7 +35,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-jazzy-joy \
       ros-jazzy-teleop-twist-joy \
       ros-jazzy-teleop-twist-keyboard \
-      ros-jazzy-rplidar-ros \
       ros-jazzy-ros-gz \
       ros-jazzy-gz-ros2-control \
       ros-jazzy-drivelink-bringup \

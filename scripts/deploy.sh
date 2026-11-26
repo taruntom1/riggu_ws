@@ -63,8 +63,11 @@ set +u
 source /opt/ros/jazzy/setup.bash
 set -u
 
-mapfile -t pkgs < <(find src -mindepth 2 -maxdepth 2 -name package.xml -printf '%h\n' | grep -v '/riggu_gazebo$' | sort)
+log "vcs import (riggu.repos)"
+vcs import --input riggu.repos src/external
+
 log "rosdep install"
+mapfile -t pkgs < <(colcon list --base-paths src --paths-only --packages-skip riggu_gazebo)
 rosdep install --from-paths "${pkgs[@]}" --ignore-src --rosdistro jazzy -y
 
 log "colcon build"

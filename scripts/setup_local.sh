@@ -48,7 +48,7 @@ ROS_COMMON=(
   ros-jazzy-rmw-zenoh-cpp ros-jazzy-ros2-control ros-jazzy-ros2-controllers ros-jazzy-xacro
   ros-jazzy-navigation2 ros-jazzy-nav2-bringup ros-jazzy-slam-toolbox ros-jazzy-robot-localization
   ros-jazzy-twist-mux ros-jazzy-joy ros-jazzy-teleop-twist-joy ros-jazzy-teleop-twist-keyboard
-  ros-jazzy-rplidar-ros ros-jazzy-drivelink-bringup
+  ros-jazzy-drivelink-bringup
 )
 
 # --- apt sources -----------------------------------------------------------------
@@ -100,10 +100,11 @@ set +u
 # shellcheck source=/dev/null
 source /opt/ros/jazzy/setup.bash
 set -u
-mapfile -t pkgs < <(find "$WS/src" -mindepth 2 -maxdepth 2 -name package.xml -printf '%h\n' | sort)
-if [[ $PROFILE == robot ]]; then
-  mapfile -t pkgs < <(printf '%s\n' "${pkgs[@]}" | grep -v '/riggu_gazebo$')
-fi
+log "Source dependencies (riggu.repos -> src/external)"
+vcs import --input "$WS/riggu.repos" "$WS/src/external"
+skip=()
+[[ $PROFILE == robot ]] && skip=(--packages-skip riggu_gazebo)
+mapfile -t pkgs < <(colcon list --base-paths "$WS/src" --paths-only "${skip[@]}")
 rosdep install --from-paths "${pkgs[@]}" --ignore-src --rosdistro jazzy -y
 
 # --- robot-only system setup ---------------------------------------------------
