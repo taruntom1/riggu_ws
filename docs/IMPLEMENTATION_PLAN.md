@@ -33,7 +33,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Each phase is one feature branc
 
 Tasks
 - Rename `master` → `main`; add `.gitignore`, `README.md`, `LICENSE` (Apache-2.0 unless you choose otherwise).
-- **On this WSL machine:** remove the broken Docker Desktop context; install docker-ce, the compose plugin, nvidia-container-toolkit, and `gh`.
+- **On this WSL machine:** run `sudo scripts/setup_host_tools.sh`. It removes the broken Docker Desktop context and installs docker-ce, the compose plugin, nvidia-container-toolkit, and `gh`.
 - **You:** create the public GitHub repo and `gh auth login`. I add `origin` and push.
 - **You:** generate an SSH key here and copy it to the Pi; set the Pi's hostname to `riggu`.
 

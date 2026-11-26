@@ -4,6 +4,7 @@ Host-side tooling. *Planned — Phase 1, except `save_map.sh` (Phase 7).*
 
 | Script | Use |
 |---|---|
+| `setup_host_tools.sh [--no-gpu] [--no-gh]` | **Available.** Run with sudo on any Ubuntu dev host, including WSL2: Docker Engine + buildx/compose, NVIDIA Container Toolkit (auto-detected), `gh`. On WSL it also strips Docker Desktop's `credsStore` and context from `~/.docker/config.json` (backup kept) |
 | `setup_local.sh --profile robot\|dev` | Native Ubuntu 24.04 install. `robot` (Pi): ros-base, DriveLink agent/cli/bringup, lidar, Nav2, zenoh router unit, udev, Bluetooth, chrony, avahi, groups. `dev`: desktop-full, Gazebo Harmonic, Nav2 |
 | `env.sh <sim\|remote\|robot>` | **Source it.** Sources Jazzy and the workspace, and selects the rmw_zenoh profile |
 | `docker_run.sh [cmd…]` | Runs the dev/sim container with auto-detected display and GPU |
