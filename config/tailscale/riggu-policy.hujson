@@ -1,0 +1,33 @@
+// Tailnet policy for the dedicated "riggu" tailnet.
+// Paste into the riggu tailnet's admin console: Access controls -> JSON editor.
+//
+// Model: the Pi is the only device in this tailnet, tagged tag:robot, and it
+// is shared out to people (your personal account, collaborators). Sharees
+// appear as autogroup:shared. Shared machines are quarantined, so the Pi
+// can't initiate connections into anyone's tailnet. This policy adds:
+//   * people -> Pi: only SSH, zenoh, DriveLink agent and ping
+//   * Pi -> anything: nothing (no rule = deny)
+{
+  "tagOwners": {
+    "tag:robot": ["autogroup:admin"],
+  },
+
+  "acls": [
+    {
+      "action": "accept",
+      "src": ["autogroup:member", "autogroup:shared"],
+      "proto": "tcp",
+      // 22 = SSH, 7447 = rmw_zenoh router, 47620 = DriveLink agent
+      "dst": ["tag:robot:22,7447,47620"],
+    },
+    {
+      "action": "accept",
+      "src": ["autogroup:member", "autogroup:shared"],
+      "proto": "icmp",
+      "dst": ["tag:robot:*"],
+    },
+  ],
+
+  // OpenSSH with keys is used; Tailscale SSH stays off.
+  "ssh": [],
+}
