@@ -18,7 +18,8 @@ ROS 2 **Jazzy** workspace for *riggu*, a differential-drive robot.
 
 ## Environment
 - The dev host is WSL2 Ubuntu 26.04 with ROS **Lyrical** in `/opt/ros/lyrical`. Never source it. Build and run inside the Jazzy container: `scripts/docker_run.sh`, or the devcontainer.
-- The robot is at `ssh ${RIGGU_HOST:-riggu.local}`. The Pi builds natively; deploy with `scripts/deploy.sh`.
+- The robot is at `ssh ${RIGGU_HOST:-riggu.local}` (user `riggu`). The Pi builds natively; deploy with `scripts/deploy.sh`.
+- The Pi sits on the laptop's Windows hotspot, which WSL can't reach directly. SSH and zenoh go through Windows port-forwards: `127.0.0.1:2222` and `127.0.0.1:17447`. If the Pi is unreachable, re-run `scripts/windows/riggu_portproxy.ps1` as admin.
 - `source scripts/env.sh sim|remote|robot` selects the rmw_zenoh profile.
 
 ## Rules

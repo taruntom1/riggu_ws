@@ -11,7 +11,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Each phase is one feature branc
 | Dev environment | Docker Engine inside WSL (docker-ce + nvidia-container-toolkit), RTX 4050 via WSLg; VS Code devcontainer on the same image |
 | Pi deploy | Push → `scripts/deploy.sh` on the Pi (pull, rosdep, colcon build, restart services) |
 | Pi access | Key-based SSH from this WSL machine to `riggu.local` |
-| Pi address | Hostname `riggu`, mDNS `riggu.local`; `RIGGU_HOST` env var overrides (needed if WSL2 NAT blocks mDNS) |
+| Pi address | The Pi (hostname `riggu`, user `riggu`) is on the laptop's **Windows mobile hotspot** (192.168.137.0/24). WSL mirrored mode can't reach that subnet, so `scripts/windows/riggu_portproxy.ps1` forwards `127.0.0.1:2222 → Pi:22` and `127.0.0.1:17447 → Pi:7447`. `~/.ssh/config` maps `riggu.local` to `127.0.0.1:2222`. Env overrides: `RIGGU_HOST` (SSH host, default `riggu.local`), `RIGGU_ZENOH_ENDPOINT` (default `tcp/127.0.0.1:17447`) |
 | Order | Interleaved: every capability is brought up in sim, then on the real robot, before moving on |
 
 ## Cross-cutting conventions
@@ -21,7 +21,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Each phase is one feature branc
 - **One config for sim and real:** shared `controllers.yaml`, EKF, and Nav2 params; only the ros2_control hardware block and `use_sim_time` differ. Launch arg `mode:=real|sim|mock`.
 - **Zenoh profiles** (`config/zenoh/`):
   - `robot` (Pi): router listens on `tcp/[::]:7447`; local sessions connect to it.
-  - `remote` (laptop to robot): session connects to `tcp/${RIGGU_HOST}:7447`.
+  - `remote` (laptop to robot): **client-mode** session connecting to `${RIGGU_ZENOH_ENDPOINT}` (default `tcp/127.0.0.1:17447`, the port-forward). Client mode routes everything through the Pi router, so the Pi's unreachable peer locators don't matter.
   - `sim` (container): local router only, isolated from the robot.
   - Selected by `source scripts/env.sh <profile>`, which sets `RMW_IMPLEMENTATION=rmw_zenoh_cpp` and the `ZENOH_*_CONFIG_URI` variables.
 - **DriveLink:** reuse the installed `drivelink.ros2_control.xacro` macro rather than copying the plugin block, so plugin names stay owned by DriveLink. Agent config `/etc/drivelink/agent.json`, device alias `base`, USB endpoint `serial:///dev/drivelink/<serial>` (from `drivelink-agent --list-ports`). ROS user in the `drivelink` group for the token.
@@ -183,6 +183,6 @@ Tasks
 | `ros-jazzy-drivelink-*` arm64/amd64 availability, and the macro and plugin names | Verified at Phase 1 from the installed packages; you (DriveLink author) fix upstream if needed |
 | RPLIDAR C1 support in apt `rplidar_ros` | Checked in Phase 1; fall back to Slamtec `sllidar_ros2` via `riggu.repos` |
 | BNO055 yaw disturbed by motor magnets | Phase 6 interference test; one-flag fallback to gyro-only |
-| mDNS across WSL2 NAT | `RIGGU_HOST` IP override, or WSL mirrored networking (Windows-side `.wslconfig`, your choice) |
+| Pi on the Windows hotspot is unreachable from WSL | Windows `netsh portproxy` (`scripts/windows/riggu_portproxy.ps1`). Re-run it if the Pi's hotspot IP changes |
 | Clock skew between Pi and laptop breaking RViz TF | chrony on the Pi; the laptop only visualises |
 | Pi 5 CPU under SLAM + Nav2 | MPPI batch and rate tuning, costmap update rates, Phase 8 profiling |

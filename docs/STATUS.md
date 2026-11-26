@@ -18,10 +18,7 @@ Updated 2026-11-26. Next phase: **0**. Run a phase with `/implement-phase <n>`.
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 0 (Pi only):**
-  - On the Pi: `sudo hostnamectl set-hostname riggu && sudo apt install -y avahi-daemon`.
-  - From WSL: `ssh-copy-id <pi-user>@<pi-ip>` (key `~/.ssh/id_ed25519` already exists).
-  - Tell the agent the Pi user and IP.
+- **Phase 0:** from a WSL terminal (not on the Pi), run `ssh-copy-id riggu.local` once (asks for the Pi password).
 - **Phase 2:** robot measurements (list at the end of `docs/REQUIREMENTS.md`).
 
 ## Known environment facts
@@ -32,7 +29,9 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
 - GitHub SSH port 22 is blocked. `~/.ssh/config` routes `github.com` through `ssh.github.com:443`.
 - Repo: https://github.com/taruntom1/riggu_ws (public). Git author is `taruntom1`, set in the repo-local config.
 - Name history: the old repo named `riggu_ws` was renamed to `riggu_ws_old`, and the new repo took the name.
+- The Pi (user `riggu`, mDNS `riggu.local` = 192.168.137.126) is on the laptop's Windows mobile hotspot. WSL can't reach that subnet. Windows portproxy forwards `127.0.0.1:2222` → Pi:22 and `127.0.0.1:17447` → Pi:7447. `~/.ssh/config` maps `riggu`/`riggu.local` to the forward.
 
 ## Decisions / deviations
 - Phase 0: the baseline commit (docs, `.gitignore`) went straight to `main`. The empty git repo in `/home/tarun` was removed, at the user's request.
 - Phase 0: host installs are in `scripts/setup_host_tools.sh`, which runs on any Ubuntu.
+- Phase 0: the user chose to keep the Pi on the Windows hotspot and use a port-forward (`scripts/windows/riggu_portproxy.ps1`). The `remote` zenoh profile becomes client mode on `tcp/127.0.0.1:17447`.
