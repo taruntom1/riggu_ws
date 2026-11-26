@@ -1,0 +1,23 @@
+# colcon
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Editors / local tooling
+.vscode/
+.idea/
+*.swp
+.claude/settings.local.json
+.claude/worktrees/
+
+# Secrets — never commit DriveLink tokens or keys
+.env
+*.token
+token
+id_*
+*.pem

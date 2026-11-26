@@ -1,0 +1,188 @@
+# riggu — Implementation Plan
+
+Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Each phase is one feature branch and one PR into `main`, merged after CI is green and the acceptance checks pass. Run a phase with `/implement-phase <n>`; progress lives in [STATUS.md](STATUS.md).
+
+## Working agreements
+
+| Topic | Decision |
+|---|---|
+| Repo | Public GitHub `taruntom1/riggu_ws`; local `master` renamed to `main` |
+| Git flow | `phase/<n>-<name>` branch → PR → CI green → you merge |
+| Dev environment | Docker Engine inside WSL (docker-ce + nvidia-container-toolkit), RTX 4050 via WSLg; VS Code devcontainer on the same image |
+| Pi deploy | Push → `scripts/deploy.sh` on the Pi (pull, rosdep, colcon build, restart services) |
+| Pi access | Key-based SSH from this WSL machine to `riggu.local` |
+| Pi address | Hostname `riggu`, mDNS `riggu.local`; `RIGGU_HOST` env var overrides (needed if WSL2 NAT blocks mDNS) |
+| Order | Interleaved: every capability is brought up in sim, then on the real robot, before moving on |
+
+## Cross-cutting conventions
+
+- **Frames (REP-105):** `map → odom → base_footprint → base_link → {left_wheel, right_wheel, caster*, laser, imu_link}`. `odom → base_footprint` belongs to the EKF; `map → odom` to slam_toolbox or AMCL.
+- **Topics:** no namespace (single robot). `/scan`, `/imu`, `/joint_states`, `/odom` (raw wheel), `/odometry/filtered` (EKF), `/cmd_vel_joy`, `/cmd_vel_nav`, `/cmd_vel_mux`, `/cmd_vel_safe` → controller.
+- **One config for sim and real:** shared `controllers.yaml`, EKF, and Nav2 params; only the ros2_control hardware block and `use_sim_time` differ. Launch arg `mode:=real|sim|mock`.
+- **Zenoh profiles** (`config/zenoh/`):
+  - `robot` (Pi): router listens on `tcp/[::]:7447`; local sessions connect to it.
+  - `remote` (laptop to robot): session connects to `tcp/${RIGGU_HOST}:7447`.
+  - `sim` (container): local router only, isolated from the robot.
+  - Selected by `source scripts/env.sh <profile>`, which sets `RMW_IMPLEMENTATION=rmw_zenoh_cpp` and the `ZENOH_*_CONFIG_URI` variables.
+- **DriveLink:** reuse the installed `drivelink.ros2_control.xacro` macro rather than copying the plugin block, so plugin names stay owned by DriveLink. Agent config `/etc/drivelink/agent.json`, device alias `base`, USB endpoint `serial:///dev/drivelink/<serial>` (from `drivelink-agent --list-ports`). ROS user in the `drivelink` group for the token.
+- **Languages:** config-only packages use `ament_cmake`; the few small custom nodes (stop latch, waypoint runner) are Python.
+
+---
+
+## Phase 0 — Host tooling and repo (no ROS yet)
+
+Tasks
+- Rename `master` → `main`; add `.gitignore`, `README.md`, `LICENSE` (Apache-2.0 unless you choose otherwise).
+- **On this WSL machine:** remove the broken Docker Desktop context; install docker-ce, the compose plugin, nvidia-container-toolkit, and `gh`.
+- **You:** create the public GitHub repo and `gh auth login`. I add `origin` and push.
+- **You:** generate an SSH key here and copy it to the Pi; set the Pi's hostname to `riggu`.
+
+Done when: `docker run --gpus all … nvidia-smi` works in WSL, `git push` works, and `ssh riggu.local` works.
+
+## Phase 1 — Workspace skeleton, Docker, setup scripts, CI
+
+Tasks
+- `src/` packages with `package.xml` and build files only: `riggu_description`, `riggu_bringup`, `riggu_gazebo`, `riggu_navigation`, `riggu_teleop`.
+- `riggu.repos` for source deps (the lidar driver only if apt's `rplidar_ros` lacks C1 support; verified here).
+- `docker/Dockerfile` (amd64) from `osrf/ros:jazzy-desktop-full`. Stages:
+  - `base`: rmw_zenoh, Nav2, slam_toolbox, robot_localization, twist_mux, joy, teleop_twist_joy, ros_gz, gz_ros2_control, DriveLink apt repo + `ros-jazzy-drivelink-bringup`.
+  - `dev`: tools, non-root user matching host UID.
+- `docker/compose.yaml` + `scripts/docker_run.sh`:
+  - Display: WSLg (`/mnt/wslg`, `WAYLAND_DISPLAY`), X11, or Wayland.
+  - GPU: NVIDIA (`--gpus all`), `/dev/dri`, or `LIBGL_ALWAYS_SOFTWARE`.
+  - Mounts the workspace.
+- `.devcontainer/devcontainer.json` using the same image and run args.
+- `scripts/setup_local.sh --profile robot|dev`. Idempotent; installs:
+  - Both profiles: ROS apt, Jazzy, rosdep.
+  - `robot`: ros-base, DriveLink agent/cli/bringup, udev rules (`/dev/rplidar`), Bluetooth + joystick packages, chrony, avahi, zenoh router systemd unit, groups (`dialout`, `drivelink`, `input`).
+  - `dev`: desktop-full, Gazebo Harmonic.
+- `scripts/env.sh`, `scripts/deploy.sh`.
+- `.github/workflows/ci.yml`: build image (cached), `colcon build`, `colcon test`, ament lint.
+
+Done when: `scripts/docker_run.sh` opens a GPU-accelerated RViz on WSLg, `colcon build` is clean in the container, and CI is green on the PR.
+
+## Phase 2 — Robot description (URDF) ⟵ needs your measurements
+
+Tasks
+- `riggu_description/urdf/`:
+  - `riggu.urdf.xacro`, plus `properties.xacro` holding every measurement in one file.
+  - Inertia macros; wheels, casters, `laser`, `imu_link`.
+  - Simple meshes or primitives.
+- `ros2_control.xacro` selects the hardware by `mode`:
+  - `real`: DriveLink macro with velocity command interfaces and IMU sensor.
+  - `sim`: `gz_ros2_control/GazeboSimSystem` with the same joints and IMU sensor.
+  - `mock`: `mock_components/GenericSystem`, for CI and desk tests.
+- `display.launch.py` (robot_state_publisher, joint_state_publisher_gui, RViz).
+- Test: xacro expands for all three modes and `check_urdf` passes (colcon test).
+
+Done when: the model in RViz matches the physical robot, and the frames and axes in RViz agree with the real IMU and lidar mounting.
+
+## Phase 3 — Simulated drive
+
+Tasks
+- `riggu_gazebo`: indoor house world, `sim.launch.py` (gz sim, spawn, `ros_gz_bridge` for `/clock` and `/scan`).
+- Sensors:
+  - Lidar: `gpu_lidar` matched to the C1 (10 Hz, 0.72°, 0.05–12 m, Gaussian noise).
+  - IMU: through gz_ros2_control, with noise.
+- `riggu_bringup/config/controllers.yaml` (shared): `joint_state_broadcaster`, `imu_sensor_broadcaster`, `diff_drive_controller` with velocity interface, limits, `cmd_vel_timeout`.
+- `riggu_bringup/launch/bringup.launch.py mode:=sim|real|mock`.
+
+Done when: keyboard teleop drives the robot in Gazebo, `/scan`, `/imu`, and `/odom` are sane in RViz, and CI runs a `mock`-mode launch test.
+
+## Phase 4 — Real base bring-up
+
+Tasks
+- Run `setup_local.sh --profile robot` on the Pi over SSH. Configure the DriveLink agent: alias `base`, USB endpoint. Start the zenoh router service.
+- `bringup.launch.py mode:=real` on the Pi: robot_state_publisher, `ros2_control_node` with the DriveLink plugin, spawners, lidar driver on `/dev/rplidar`.
+- Hardware checks (in this order):
+  1. Wheel direction and encoder polarity, open loop in the DriveLink app first.
+  2. Velocity-mode PID response.
+  3. IMU axes against the URDF.
+  4. Lidar orientation against the URDF.
+- Calibrate wheel radius (2 m straight run) and separation (10 in-place turns); write the values back to `properties.xacro`.
+- Laptop: `source scripts/env.sh remote` → RViz over zenoh.
+
+Done when: keyboard teleop from the laptop drives the real robot, odometry error is under about 2% on the straight-line and rotation tests, and RViz on the laptop shows the scan and TF live.
+
+## Phase 5 — Joystick, twist_mux, safety chain
+
+Tasks
+- Pairing guide for a generic Bluetooth pad on the Pi; `config/joy_generic.yaml` for the mapping, plus a doc on finding indices with `ros2 topic echo /joy`.
+- `joy` + `teleop_twist_joy` (deadman button, normal/turbo scale) → `/cmd_vel_joy`.
+- `twist_mux`: joy (priority 100) > nav (10). The lock topic `/estop` (priority 255) zeroes output.
+- `riggu_teleop/stop_latch.py`: a stop button toggles `/estop` latched until it is pressed again.
+- Chain: `twist_mux → collision_monitor → diff_drive_controller`. The collision monitor is added here so teleop is protected too; whether joystick bypasses it is a config switch.
+- Loss-of-link layering: joy timeout → twist_mux timeout → `cmd_vel_timeout` → DriveLink watchdog (200 ms).
+- `riggu-base.service` (systemd) on the Pi: base bringup + teleop on boot, after the zenoh router and drivelink-agent.
+
+Done when:
+- The robot moves only while the deadman is held, and the joystick always beats a published `/cmd_vel_nav`.
+- The stop latch holds until it is released.
+- Turning the pad off stops the robot within about 0.5 s.
+- The robot drives from the pad after a cold boot with no laptop.
+
+## Phase 6 — Sensor fusion (EKF)
+
+Tasks
+- BNO055 calibration in the DriveLink app (all four levels at 3, saved), done with the robot in its final configuration.
+- Set IMU covariances in the `imu_sensor_broadcaster` params.
+- `robot_localization` `ekf_node` (`two_d_mode`, 30 Hz):
+  - `odom0`: vx and vyaw from `/odom`.
+  - `imu0`: vyaw plus absolute yaw.
+  - The `use_imu_orientation` launch arg swaps in a gyro-only config.
+- `diff_drive_controller` `enable_odom_tf: false`.
+- Sim IMU gets bias and noise so the EKF tuning carries over.
+- Magnetic interference check: compare IMU yaw with odometry yaw while spinning the motors in place. Record the result and choose the default.
+
+Done when: after a 4 m square driven by joystick, the EKF ends closer to the start than raw wheel odometry, and the 360° spin error is under 3°.
+
+## Phase 7 — Mapping and localisation
+
+Tasks
+- `riggu_navigation`:
+  - `slam.launch.py` (slam_toolbox online async, 5 cm resolution, C1 range limits).
+  - `localization.launch.py` (map_server + AMCL, diff-drive motion model).
+- Map save helper `scripts/save_map.sh <name>`. Maps go to `~/riggu_maps` on the Pi; the sim reference map is committed under `riggu_navigation/maps/`.
+- RViz configs for mapping and navigation.
+
+Done when: clean maps of the sim house and of a real room exist, and AMCL converges from a rough initial pose within one short drive.
+
+## Phase 8 — Autonomous navigation
+
+Tasks
+- `nav2_params.yaml`:
+  - Planner: Smac 2D. Controller: MPPI (DiffDrive, about 20 Hz, batch sized for the Pi 5).
+  - Velocity smoother.
+  - Costmaps from `/scan` with inflation sized to the footprint.
+  - Recovery behaviours: default BT.
+- Collision monitor polygons (stop, slowdown) tuned to the footprint and max speed.
+- Waypoint following: the Nav2 RViz panel, plus `riggu_navigation/waypoints.py`, which runs a YAML list of poses (optionally looped).
+- `navigation.launch.py` (localisation + Nav2) and an `slam:=true` variant that navigates while mapping.
+- Pi profiling: CPU and latency under full stack; tune until the controller loop holds its rate.
+
+Done when:
+- Goal and waypoint runs succeed in sim and on the real robot.
+- The collision monitor stops the robot for an obstacle thrown into its path.
+- The joystick can override Nav2 at any moment.
+- The Pi stays under about 70% CPU.
+
+## Phase 9 — Hardening and docs
+
+Tasks
+- CI: headless Gazebo smoke test (spawn, drive, odometry moves).
+- README quickstarts: Docker sim, native dev, Pi setup, daily robot use.
+- Docs: tuning notes, troubleshooting (zenoh connectivity, WSL mDNS, Bluetooth re-pairing).
+- Tag `v1.0`.
+
+---
+
+## Risks and open checks
+
+| Risk | Mitigation |
+|---|---|
+| `ros-jazzy-drivelink-*` arm64/amd64 availability, and the macro and plugin names | Verified at Phase 1 from the installed packages; you (DriveLink author) fix upstream if needed |
+| RPLIDAR C1 support in apt `rplidar_ros` | Checked in Phase 1; fall back to Slamtec `sllidar_ros2` via `riggu.repos` |
+| BNO055 yaw disturbed by motor magnets | Phase 6 interference test; one-flag fallback to gyro-only |
+| mDNS across WSL2 NAT | `RIGGU_HOST` IP override, or WSL mirrored networking (Windows-side `.wslconfig`, your choice) |
+| Clock skew between Pi and laptop breaking RViz TF | chrony on the Pi; the laptop only visualises |
+| Pi 5 CPU under SLAM + Nav2 | MPPI batch and rate tuning, costmap update rates, Phase 8 profiling |
