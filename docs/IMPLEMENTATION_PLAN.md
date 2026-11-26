@@ -11,7 +11,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Each phase is one feature branc
 | Dev environment | Docker Engine inside WSL (docker-ce + nvidia-container-toolkit), RTX 4050 via WSLg; VS Code devcontainer on the same image |
 | Pi deploy | Push → `scripts/deploy.sh` on the Pi (pull, rosdep, colcon build, restart services) |
 | Pi access | Key-based SSH from this WSL machine to `riggu.local` |
-| Pi address | Hostname `riggu`, mDNS `riggu.local`; `RIGGU_HOST` env var overrides (needed if WSL2 NAT blocks mDNS) |
+| Pi address | **Primary: Tailscale.** The Pi (hostname and user `riggu`) is the only machine in a dedicated riggu tailnet, tagged `tag:robot`. It is *shared* to each person, and shared machines can't initiate connections into the recipient's tailnet. The policy is `config/tailscale/riggu-policy.hujson`. Each dev's `~/.ssh/config` maps `riggu.local` to the Pi's riggu-tailnet MagicDNS name. **Fallback (no internet):** the Pi is on the laptop's Windows hotspot; `scripts/windows/riggu_portproxy.ps1` forwards `127.0.0.1:2222 → Pi:22` and `127.0.0.1:17447 → Pi:7447`; SSH alias `riggu-local`. Env: `RIGGU_HOST` (SSH host, default `riggu.local`), `RIGGU_ZENOH_ENDPOINT` (default `tcp/<HostName of RIGGU_HOST from ssh -G>:7447`) |
 | Order | Interleaved: every capability is brought up in sim, then on the real robot, before moving on |
 
 ## Cross-cutting conventions
@@ -21,7 +21,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Each phase is one feature branc
 - **One config for sim and real:** shared `controllers.yaml`, EKF, and Nav2 params; only the ros2_control hardware block and `use_sim_time` differ. Launch arg `mode:=real|sim|mock`.
 - **Zenoh profiles** (`config/zenoh/`):
   - `robot` (Pi): router listens on `tcp/[::]:7447`; local sessions connect to it.
-  - `remote` (laptop to robot): session connects to `tcp/${RIGGU_HOST}:7447`.
+  - `remote` (laptop to robot): **client-mode** session connecting to `${RIGGU_ZENOH_ENDPOINT}`. Default: the tailnet name from `ssh -G $RIGGU_HOST`, port 7447; the offline fallback is `tcp/127.0.0.1:17447`. Client mode routes everything through the Pi router, and the Pi never has to connect back to the laptop, which the Tailscale share forbids.
   - `sim` (container): local router only, isolated from the robot.
   - Selected by `source scripts/env.sh <profile>`, which sets `RMW_IMPLEMENTATION=rmw_zenoh_cpp` and the `ZENOH_*_CONFIG_URI` variables.
 - **DriveLink:** reuse the installed `drivelink.ros2_control.xacro` macro rather than copying the plugin block, so plugin names stay owned by DriveLink. Agent config `/etc/drivelink/agent.json`, device alias `base`, USB endpoint `serial:///dev/drivelink/<serial>` (from `drivelink-agent --list-ports`). ROS user in the `drivelink` group for the token.
@@ -33,7 +33,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Each phase is one feature branc
 
 Tasks
 - Rename `master` → `main`; add `.gitignore`, `README.md`, `LICENSE` (Apache-2.0 unless you choose otherwise).
-- **On this WSL machine:** remove the broken Docker Desktop context; install docker-ce, the compose plugin, nvidia-container-toolkit, and `gh`.
+- **On this WSL machine:** run `sudo scripts/setup_host_tools.sh`. It removes the broken Docker Desktop context and installs docker-ce, the compose plugin, nvidia-container-toolkit, and `gh`.
 - **You:** create the public GitHub repo and `gh auth login`. I add `origin` and push.
 - **You:** generate an SSH key here and copy it to the Pi; set the Pi's hostname to `riggu`.
 
@@ -54,7 +54,7 @@ Tasks
 - `.devcontainer/devcontainer.json` using the same image and run args.
 - `scripts/setup_local.sh --profile robot|dev`. Idempotent; installs:
   - Both profiles: ROS apt, Jazzy, rosdep.
-  - `robot`: ros-base, DriveLink agent/cli/bringup, udev rules (`/dev/rplidar`), Bluetooth + joystick packages, chrony, avahi, zenoh router systemd unit, groups (`dialout`, `drivelink`, `input`).
+  - `robot`: ros-base, DriveLink agent/cli/bringup, Tailscale (`setup_tailscale.sh --install-only`), udev rules (`/dev/rplidar`), Bluetooth + joystick packages, chrony, avahi, zenoh router systemd unit, groups (`dialout`, `drivelink`, `input`).
   - `dev`: desktop-full, Gazebo Harmonic.
 - `scripts/env.sh`, `scripts/deploy.sh`.
 - `.github/workflows/ci.yml`: build image (cached), `colcon build`, `colcon test`, ament lint.
@@ -92,7 +92,7 @@ Done when: keyboard teleop drives the robot in Gazebo, `/scan`, `/imu`, and `/od
 ## Phase 4 — Real base bring-up
 
 Tasks
-- Run `setup_local.sh --profile robot` on the Pi over SSH. Configure the DriveLink agent: alias `base`, USB endpoint. Start the zenoh router service.
+- Run `setup_local.sh --profile robot` on the Pi over SSH. Configure the DriveLink agent: alias `base`, USB endpoint, and bind it so tailnet users can reach port 47620 (the policy already allows it). Start the zenoh router service.
 - `bringup.launch.py mode:=real` on the Pi: robot_state_publisher, `ros2_control_node` with the DriveLink plugin, spawners, lidar driver on `/dev/rplidar`.
 - Hardware checks (in this order):
   1. Wheel direction and encoder polarity, open loop in the DriveLink app first.
@@ -183,6 +183,6 @@ Tasks
 | `ros-jazzy-drivelink-*` arm64/amd64 availability, and the macro and plugin names | Verified at Phase 1 from the installed packages; you (DriveLink author) fix upstream if needed |
 | RPLIDAR C1 support in apt `rplidar_ros` | Checked in Phase 1; fall back to Slamtec `sllidar_ros2` via `riggu.repos` |
 | BNO055 yaw disturbed by motor magnets | Phase 6 interference test; one-flag fallback to gyro-only |
-| mDNS across WSL2 NAT | `RIGGU_HOST` IP override, or WSL mirrored networking (Windows-side `.wslconfig`, your choice) |
+| Robot reachability and isolation | Tailscale share from a dedicated tailnet (Pi can't reach sharees). Offline fallback: hotspot + Windows `netsh portproxy`; re-run it if the Pi's hotspot IP changes |
 | Clock skew between Pi and laptop breaking RViz TF | chrony on the Pi; the laptop only visualises |
 | Pi 5 CPU under SLAM + Nav2 | MPPI batch and rate tuning, costmap update rates, Phase 8 profiling |

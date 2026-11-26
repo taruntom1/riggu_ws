@@ -1,7 +1,7 @@
 # scripts/
 
 - **Bash style:** `#!/usr/bin/env bash`, `set -euo pipefail`, shellcheck-clean, and `--help` on every script.
-- **Setup and deploy scripts:** they must be idempotent and refuse to run on anything but Ubuntu 24.04 (check `/etc/os-release`).
+- **Setup and deploy scripts:** they must be idempotent and refuse to run on anything but Ubuntu 24.04 (check `/etc/os-release`). The exception is `setup_host_tools.sh`, which runs on any Ubuntu, because the dev host is 26.04.
 - **`setup_local.sh --profile robot|dev`:**
   - `robot` (Pi): no Gazebo.
   - `dev`: desktop-full and Gazebo Harmonic.
