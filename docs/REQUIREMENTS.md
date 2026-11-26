@@ -7,7 +7,7 @@ Differential-drive autonomous robot: ROS 2 Jazzy, rmw_zenoh, Raspberry Pi 5, Dri
 | Item | Decision |
 |---|---|
 | ROS distro | Jazzy everywhere (Pi + dev + sim) |
-| Middleware | `rmw_zenoh_cpp`; `rmw_zenohd` router runs on the Pi as a systemd service; laptop/Docker connect as zenoh clients (Pi on the laptop's Windows hotspot, reached through a Windows port-forward at `tcp/127.0.0.1:17447`); sim runs its own local router |
+| Middleware | `rmw_zenoh_cpp`; `rmw_zenohd` router runs on the Pi as a systemd service; laptop/Docker connect as zenoh clients over Tailscale (Pi in a dedicated tailnet, shared to users; offline fallback via a Windows hotspot port-forward); sim runs its own local router |
 | Robot computer | Raspberry Pi 5, Ubuntu 24.04 server (arm64) |
 | Dev machine | Jazzy in Docker (host is WSL2 Ubuntu 26.04); GUI via WSLg/X11 |
 | Workspace | Monorepo `riggu_ws`, packages prefixed `riggu_` |
