@@ -9,6 +9,7 @@ Top-level bring-up for the real robot, the simulation, and mock hardware. *Plann
 | `config/ekf.yaml` | EKF fusing wheel vx/vyaw and IMU vyaw + yaw, `two_d_mode`, 30 Hz |
 | `config/ekf_gyro_only.yaml` | Same, without IMU absolute yaw |
 | `config/collision_monitor.yaml` | Stop and slowdown polygons on `/scan` |
+| `systemd/rmw-zenohd.service` | Zenoh router on the Pi (rmw_zenoh default config, `tcp/[::]:7447`). Installed and enabled by `setup_local.sh --profile robot` |
 | `systemd/riggu-base.service` | Starts base bring-up on boot (Pi); after `rmw-zenohd`, `drivelink-agent` |
 
 **cmd_vel chain**

@@ -1,0 +1,24 @@
+{
+  // Same image and run settings as scripts/docker_run.sh: initializeCommand runs the
+  // host-side display/GPU detection and writes docker/compose.override.yaml.
+  "name": "riggu (Jazzy)",
+  "initializeCommand": "scripts/docker_run.sh --write-override",
+  "dockerComposeFile": ["../docker/compose.yaml", "../docker/compose.override.yaml"],
+  "service": "dev",
+  "workspaceFolder": "/ws",
+  "remoteUser": "riggu",
+  "updateRemoteUserUID": true,
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-iot.vscode-ros",
+        "ms-python.python",
+        "ms-vscode.cpptools",
+        "redhat.vscode-xml",
+        "redhat.vscode-yaml",
+        "timonwong.shellcheck"
+      ]
+    }
+  }
+}

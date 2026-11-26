@@ -1,0 +1,27 @@
+# Static container settings. Display and GPU are detected by scripts/docker_run.sh,
+# which writes an override file (docker/compose.override.yaml, git-ignored).
+name: riggu
+
+services:
+  dev:
+    image: riggu_ws:jazzy-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+      args:
+        USER_UID: ${RIGGU_UID:-1000}
+        USER_GID: ${RIGGU_GID:-1000}
+    network_mode: host
+    ipc: host
+    init: true
+    stdin_open: true
+    tty: true
+    working_dir: /ws
+    volumes:
+      - ..:/ws
+    environment:
+      QT_X11_NO_MITSHM: "1"
+      RIGGU_HOST: ${RIGGU_HOST:-riggu.local}
+      RIGGU_ZENOH_ENDPOINT: ${RIGGU_ZENOH_ENDPOINT:-}
+    command: ["sleep", "infinity"]

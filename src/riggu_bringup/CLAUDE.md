@@ -8,4 +8,4 @@
   - `config/ekf.yaml` fuses wheel vx and vyaw plus IMU vyaw and absolute yaw.
   - `config/ekf_gyro_only.yaml` drops absolute yaw.
   - The `use_imu_orientation` launch arg chooses between them.
-- **systemd:** units in `systemd/` are installed by `scripts/setup_local.sh --profile robot`. `riggu-base.service` starts after `rmw-zenohd` and `drivelink-agent`.
+- **systemd:** units in `systemd/` are installed by `scripts/setup_local.sh --profile robot`, which replaces `@USER@` and `@WS@`. `riggu-base.service` starts after `rmw-zenohd` and `drivelink-agent`.

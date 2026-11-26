@@ -1,11 +1,11 @@
 # Status
 
-Updated 2026-11-26. Next phase: **0**. Run a phase with `/implement-phase <n>`.
+Updated 2026-11-26. Next phase: **1** (in review). Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
-| 0 | Host tooling and repo | review | `phase/0-host-tooling` · [PR #1](https://github.com/taruntom1/riggu_ws/pull/1) |
-| 1 | Workspace, Docker, setup scripts, CI | todo | — |
+| 0 | Host tooling and repo | done | `phase/0-host-tooling` · [PR #1](https://github.com/taruntom1/riggu_ws/pull/1) |
+| 1 | Workspace, Docker, setup scripts, CI | review | `phase/1-workspace` · [PR #2](https://github.com/taruntom1/riggu_ws/pull/2) |
 | 2 | Robot description (URDF) | todo | — |
 | 3 | Simulated drive | todo | — |
 | 4 | Real base bring-up | todo | — |
@@ -18,7 +18,7 @@ Updated 2026-11-26. Next phase: **0**. Run a phase with `/implement-phase <n>`.
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 0:** review and merge PR #1.
+- **Phase 1:** review and merge PR #2.
 - **Phase 2:** robot measurements (list at the end of `docs/REQUIREMENTS.md`).
 
 ## Known environment facts
@@ -36,6 +36,9 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
   - The personal tailnet has a stale offline machine also named `riggu`, so always use the full name.
 - **Fallback:** `ssh riggu-local` and `tcp/127.0.0.1:17447`, through the Windows portproxy.
 - Pi: Ubuntu 24.04.4 aarch64, avahi active, key SSH works, passwordless sudo, Tailscale 1.104.7.
+- Pi already has ros-jazzy-ros-base and DriveLink 0.2.1 (agent, cli 0.2.0, bringup). DriveLink board: CH343 `1a86:55d3` → `/dev/ttyACM0`, `/dev/drivelink/5B5E080149`.
+- Dev image `riggu_ws:jazzy-dev` (7.1 GB). On WSL, GL is Mesa D3D12 on the RTX 4050 (OpenGL 4.6).
+- DriveLink macro: `drivelink_diff_drive(name agent device token_file token left_joint left_label right_joint right_label imu_label)`.
 
 ## Decisions / deviations
 - Phase 0: the baseline commit (docs, `.gitignore`) went straight to `main`. The empty git repo in `/home/tarun` was removed, at the user's request.
@@ -45,3 +48,7 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
   - The hotspot port-forward is kept as the offline fallback.
   - The `remote` zenoh profile is client mode.
 - **Phase 0, Pi sudo:** passwordless, as the user chose.
+- **Phase 1, zenoh:** no `config/zenoh/*.json5`. Profiles are rmw_zenoh defaults plus `ZENOH_CONFIG_OVERRIDE` in `scripts/env.sh` (rmw_zenoh 0.2.13 supports it).
+- **Phase 1, lidar:** apt `rplidar_ros` 2.1.0 has no C1 support, so Slamtec `sllidar_ros2` is pinned in `riggu.repos` → `src/external/`.
+- **Phase 1, compose:** a single `dev` service (no separate `sim` service); sim is a command in it.
+- **Phase 1, CI:** image built with the GHA layer cache, nothing published (user's choice).

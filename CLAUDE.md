@@ -22,7 +22,8 @@ ROS 2 **Jazzy** workspace for *riggu*, a differential-drive robot.
 - `riggu.local` reaches the Pi over **Tailscale**: a dedicated riggu tailnet, shared to users, mapped in `~/.ssh/config`. The Pi can't connect back to user machines, so design every robot↔laptop link with the laptop connecting to the Pi.
 - Without internet, use `ssh riggu-local`, a Windows hotspot port-forward (`127.0.0.1:2222`; zenoh on `127.0.0.1:17447`). Re-run `scripts/windows/riggu_portproxy.ps1` as admin if it stops working.
 - Never commit tailnet names, account identities, or auth keys. The repo is public.
-- `source scripts/env.sh sim|remote|robot` selects the rmw_zenoh profile.
+- `source scripts/env.sh sim|remote|robot` selects the rmw_zenoh profile. Interactive container shells source `sim` automatically.
+- Git worktrees work in the container: `docker_run.sh` also mounts the main repo's git dir.
 
 ## Rules
 - **One phase per branch:** `phase/<n>-<slug>`, then a PR into `main`. Never merge, and never push to `main`.
@@ -43,5 +44,6 @@ colcon test && colcon test-result --verbose
 - `src/`: ROS packages. See `src/CLAUDE.md`.
 - `docker/`: image and compose.
 - `scripts/`: setup, deploy, and env scripts.
-- `config/`: zenoh profiles and udev rules.
+- `config/`: udev rules and the Tailscale policy. Zenoh profiles live in `scripts/env.sh` as overrides.
+- `riggu.repos`: source deps, imported into `src/external/` (git-ignored).
 - `docs/`: requirements, plan, status.

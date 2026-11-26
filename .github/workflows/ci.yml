@@ -1,0 +1,70 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck --version && shellcheck scripts/*.sh
+
+  build-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          df -h /
+
+      - name: Host UID/GID
+        id: ids
+        run: echo "uid=$(id -u)" >> "$GITHUB_OUTPUT" && echo "gid=$(id -g)" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Same image as scripts/docker_run.sh and .devcontainer/ (docker/compose.yaml).
+      - name: Build image (GHA cache)
+        uses: docker/build-push-action@v6
+        with:
+          context: docker
+          target: dev
+          tags: riggu_ws:jazzy-dev
+          load: true
+          build-args: |
+            USER_UID=${{ steps.ids.outputs.uid }}
+            USER_GID=${{ steps.ids.outputs.gid }}
+          cache-from: type=gha,scope=riggu-dev
+          cache-to: type=gha,mode=max,scope=riggu-dev
+
+      - name: rosdep, colcon build, colcon test
+        run: |
+          scripts/docker_run.sh --display none --gpu software bash -lc '
+            set -e
+            sudo apt-get update -qq
+            mkdir -p src/external
+            vcs import --input riggu.repos src/external
+            rosdep install --from-paths src --ignore-src --rosdistro jazzy -y
+            colcon build --symlink-install --event-handlers console_direct+
+            colcon test --event-handlers console_direct+
+            colcon test-result --verbose'
+
+      - name: Upload test logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: colcon-logs
+          path: |
+            log/
+            build/*/test_results/

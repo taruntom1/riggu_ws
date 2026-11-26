@@ -19,7 +19,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Each phase is one feature branc
 - **Frames (REP-105):** `map → odom → base_footprint → base_link → {left_wheel, right_wheel, caster*, laser, imu_link}`. `odom → base_footprint` belongs to the EKF; `map → odom` to slam_toolbox or AMCL.
 - **Topics:** no namespace (single robot). `/scan`, `/imu`, `/joint_states`, `/odom` (raw wheel), `/odometry/filtered` (EKF), `/cmd_vel_joy`, `/cmd_vel_nav`, `/cmd_vel_mux`, `/cmd_vel_safe` → controller.
 - **One config for sim and real:** shared `controllers.yaml`, EKF, and Nav2 params; only the ros2_control hardware block and `use_sim_time` differ. Launch arg `mode:=real|sim|mock`.
-- **Zenoh profiles** (`config/zenoh/`):
+- **Zenoh profiles:** rmw_zenoh's default configs plus `ZENOH_CONFIG_OVERRIDE`, set by `scripts/env.sh` (no json5 files; see `config/README.md`):
   - `robot` (Pi): router listens on `tcp/[::]:7447`; local sessions connect to it.
   - `remote` (laptop to robot): **client-mode** session connecting to `${RIGGU_ZENOH_ENDPOINT}`. Default: the tailnet name from `ssh -G $RIGGU_HOST`, port 7447; the offline fallback is `tcp/127.0.0.1:17447`. Client mode routes everything through the Pi router, and the Pi never has to connect back to the laptop, which the Tailscale share forbids.
   - `sim` (container): local router only, isolated from the robot.
@@ -43,7 +43,7 @@ Done when: `docker run --gpus all … nvidia-smi` works in WSL, `git push` works
 
 Tasks
 - `src/` packages with `package.xml` and build files only: `riggu_description`, `riggu_bringup`, `riggu_gazebo`, `riggu_navigation`, `riggu_teleop`.
-- `riggu.repos` for source deps (the lidar driver only if apt's `rplidar_ros` lacks C1 support; verified here).
+- `riggu.repos` for source deps, imported into `src/external/` (git-ignored). Apt `rplidar_ros` 2.1.0 lacks C1 support, so it pins Slamtec `sllidar_ros2`.
 - `docker/Dockerfile` (amd64) from `osrf/ros:jazzy-desktop-full`. Stages:
   - `base`: rmw_zenoh, Nav2, slam_toolbox, robot_localization, twist_mux, joy, teleop_twist_joy, ros_gz, gz_ros2_control, DriveLink apt repo + `ros-jazzy-drivelink-bringup`.
   - `dev`: tools, non-root user matching host UID.
@@ -93,7 +93,7 @@ Done when: keyboard teleop drives the robot in Gazebo, `/scan`, `/imu`, and `/od
 
 Tasks
 - Run `setup_local.sh --profile robot` on the Pi over SSH. Configure the DriveLink agent: alias `base`, USB endpoint, and bind it so tailnet users can reach port 47620 (the policy already allows it). Start the zenoh router service.
-- `bringup.launch.py mode:=real` on the Pi: robot_state_publisher, `ros2_control_node` with the DriveLink plugin, spawners, lidar driver on `/dev/rplidar`.
+- `bringup.launch.py mode:=real` on the Pi: robot_state_publisher, `ros2_control_node` with the DriveLink plugin, spawners, lidar driver (`sllidar_ros2`) on `/dev/rplidar`.
 - Hardware checks (in this order):
   1. Wheel direction and encoder polarity, open loop in the DriveLink app first.
   2. Velocity-mode PID response.
@@ -180,8 +180,8 @@ Tasks
 
 | Risk | Mitigation |
 |---|---|
-| `ros-jazzy-drivelink-*` arm64/amd64 availability, and the macro and plugin names | Verified at Phase 1 from the installed packages; you (DriveLink author) fix upstream if needed |
-| RPLIDAR C1 support in apt `rplidar_ros` | Checked in Phase 1; fall back to Slamtec `sllidar_ros2` via `riggu.repos` |
+| `ros-jazzy-drivelink-*` arm64/amd64 availability, and the macro and plugin names | Phase 1: 0.2.1 on noble amd64 and arm64; macro `drivelink_diff_drive(name agent device token_file token left_joint left_label right_joint right_label imu_label)` in `drivelink_bringup/urdf/drivelink.ros2_control.xacro` |
+| RPLIDAR C1 support in apt `rplidar_ros` | Phase 1: apt 2.1.0 has no C1 support; Slamtec `sllidar_ros2` pinned in `riggu.repos` |
 | BNO055 yaw disturbed by motor magnets | Phase 6 interference test; one-flag fallback to gyro-only |
 | Robot reachability and isolation | Tailscale share from a dedicated tailnet (Pi can't reach sharees). Offline fallback: hotspot + Windows `netsh portproxy`; re-run it if the Pi's hotspot IP changes |
 | Clock skew between Pi and laptop breaking RViz TF | chrony on the Pi; the laptop only visualises |
