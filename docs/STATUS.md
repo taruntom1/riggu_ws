@@ -18,7 +18,7 @@ Updated 2026-11-26. Next phase: **1** (in review). Run a phase with `/implement-
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 1:** confirm the RViz window appeared on WSLg, then review and merge PR #2.
+- **Phase 1:** review and merge PR #2.
 - **Phase 2:** robot measurements (list at the end of `docs/REQUIREMENTS.md`).
 
 ## Known environment facts
