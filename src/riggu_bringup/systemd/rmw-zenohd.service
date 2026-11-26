@@ -1,0 +1,16 @@
+# rmw_zenoh router for riggu (robot profile). Installed by scripts/setup_local.sh,
+# which replaces @USER@. Uses rmw_zenoh's default router config (tcp/[::]:7447).
+[Unit]
+Description=rmw_zenoh router (riggu)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=@USER@
+ExecStart=/bin/bash -c 'source /opt/ros/jazzy/setup.bash && exec ros2 run rmw_zenoh_cpp rmw_zenohd'
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

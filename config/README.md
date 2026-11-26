@@ -1,17 +1,20 @@
 # config/
 
-Machine-level configuration that isn't part of a ROS package. *Planned — Phase 1.*
+Machine-level configuration that isn't part of a ROS package.
 
 | Path | Purpose |
 |---|---|
-| `zenoh/robot_router.json5` | Pi router, listening on `tcp/[::]:7447` |
-| `zenoh/robot_session.json5` | Pi sessions, connecting to the local router |
-| `zenoh/remote_session.json5` | Laptop client session, connecting to `${RIGGU_ZENOH_ENDPOINT}` (default: tailnet name of `riggu.local`, port 7447; offline: `tcp/127.0.0.1:17447`) |
-| `tailscale/riggu-policy.hujson` | **Available.** Policy for the dedicated riggu tailnet: `autogroup:member` + `autogroup:shared` → `tag:robot` on tcp 22, 7447, 47620 and ICMP; the robot gets no outbound rules |
-| `zenoh/sim_*.json5` | Isolated local router and session for simulation |
-| `udev/99-riggu.rules` | `/dev/rplidar` (C1, CP210x). DriveLink ships its own `/dev/drivelink/<serial>` |
+| `tailscale/riggu-policy.hujson` | Policy for the dedicated riggu tailnet: `autogroup:member` + `autogroup:shared` → `tag:robot` on tcp 22, 7447, 47620 and ICMP; the robot gets no outbound rules |
+| `udev/99-riggu.rules` | `/dev/rplidar` (C1, CP210x `10c4:ea60`). DriveLink (CH343 `1a86:55d3`) ships its own `/dev/drivelink/<serial>` |
 
-Profiles are selected by `source scripts/env.sh <profile>`.
+## Zenoh profiles
+No config files: every profile uses rmw_zenoh's defaults (router listens on `tcp/[::]:7447`; sessions connect to `tcp/localhost:7447`; multicast scouting off), plus `ZENOH_CONFIG_OVERRIDE` set by `source scripts/env.sh <profile>`.
+
+| Profile | Where | Router | Override |
+|---|---|---|---|
+| `robot` | Pi | `rmw-zenohd.service` | none |
+| `sim` | container | `rmw_zenohd` started by `env.sh` if port 7447 is free | none; isolated (no connect, no multicast) |
+| `remote` | laptop | the Pi's | `mode="client"; connect/endpoints=["$RIGGU_ZENOH_ENDPOINT"]`. Default: `tcp/<HostName from ssh -G $RIGGU_HOST>:7447`; offline: `tcp/127.0.0.1:17447` |
 
 ## Robot access over Tailscale
 - **Topology:** the Pi is the only node in a dedicated tailnet, tagged `tag:robot`, with no key expiry. It is shared to each person's own Tailscale account. Shared machines are quarantined: they can't initiate connections into the recipient's tailnet.

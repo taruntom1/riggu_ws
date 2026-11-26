@@ -1,0 +1,4 @@
+# riggu stable device names. Installed by scripts/setup_local.sh --profile robot.
+# RPLIDAR C1: Silicon Labs CP210x USB-UART (10c4:ea60) -> /dev/rplidar.
+# DriveLink (CH343, 1a86:55d3) gets /dev/drivelink/<serial> from DriveLink's own rules.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", MODE:="0660", GROUP:="dialout", SYMLINK+="rplidar"
