@@ -4,7 +4,7 @@ Updated 2026-11-26. Next phase: **0**. Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
-| 0 | Host tooling and repo | review (SSH to Pi pending) | `phase/0-host-tooling` · PR pending |
+| 0 | Host tooling and repo | review (SSH to Pi pending) | `phase/0-host-tooling` · [PR #1](https://github.com/taruntom1/riggu_ws/pull/1) |
 | 1 | Workspace, Docker, setup scripts, CI | todo | — |
 | 2 | Robot description (URDF) | todo | — |
 | 3 | Simulated drive | todo | — |
