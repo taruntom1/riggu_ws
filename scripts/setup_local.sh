@@ -44,9 +44,10 @@ DRIVELINK_KEY_URL=https://taruntom1.github.io/drivelink_v2/drivelink-archive-key
 DRIVELINK_KEY_FPR=0B7ABAC1B5A995FB3512E0686964AFD8333BB3D6
 
 # ROS packages both profiles need. Keep in sync with docker/Dockerfile.
+# nav2_bringup is dev-only: it depends on the Nav2 TurtleBot sims, which pull in Gazebo.
 ROS_COMMON=(
   ros-jazzy-rmw-zenoh-cpp ros-jazzy-ros2-control ros-jazzy-ros2-controllers ros-jazzy-xacro
-  ros-jazzy-navigation2 ros-jazzy-nav2-bringup ros-jazzy-slam-toolbox ros-jazzy-robot-localization
+  ros-jazzy-navigation2 ros-jazzy-slam-toolbox ros-jazzy-robot-localization
   ros-jazzy-twist-mux ros-jazzy-joy ros-jazzy-teleop-twist-joy ros-jazzy-teleop-twist-keyboard
   ros-jazzy-drivelink-bringup
 )
@@ -90,7 +91,7 @@ if [[ $PROFILE == robot ]]; then
   "${APT[@]}" ros-jazzy-ros-base drivelink-agent drivelink-cli \
     bluez joystick chrony avahi-daemon libnss-mdns
 else
-  "${APT[@]}" ros-jazzy-desktop-full ros-jazzy-ros-gz ros-jazzy-gz-ros2-control
+  "${APT[@]}" ros-jazzy-desktop-full ros-jazzy-ros-gz ros-jazzy-gz-ros2-control ros-jazzy-nav2-bringup
 fi
 
 log "rosdep"

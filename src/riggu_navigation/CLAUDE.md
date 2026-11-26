@@ -1,5 +1,6 @@
 # riggu_navigation
 
+- **No `nav2_bringup` dependency:** it pulls Gazebo onto the Pi (through the Nav2 TurtleBot sims). Write our own launch files from `nav2_*` packages.
 - **Runs on the Pi 5.** Watch the CPU: size MPPI batch/rate and costmap update rates for it.
 - **Nav2 output:** Nav2 publishes `/cmd_vel_nav` to `twist_mux`, never directly to the controller.
 - **Collision monitor:** its config lives in `riggu_bringup`, not here.
