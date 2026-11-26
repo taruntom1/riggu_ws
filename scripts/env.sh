@@ -55,7 +55,12 @@ _riggu_env() {
       if [[ $start_router == 1 ]] && ! ss -Hltn 'sport = :7447' 2>/dev/null | grep -q .; then
         nohup ros2 run rmw_zenoh_cpp rmw_zenohd >"${TMPDIR:-/tmp}/riggu_rmw_zenohd.log" 2>&1 &
         disown
-        echo "env.sh: started local zenoh router (log: ${TMPDIR:-/tmp}/riggu_rmw_zenohd.log)"
+        local i
+        for i in {1..50}; do
+          ss -Hltn 'sport = :7447' 2>/dev/null | grep -q . && break
+          sleep 0.1
+        done
+        echo "env.sh: started local zenoh router after ${i}00 ms (log: ${TMPDIR:-/tmp}/riggu_rmw_zenohd.log)"
       fi ;;
     robot)
       if command -v systemctl &>/dev/null && ! systemctl is-active --quiet rmw-zenohd.service; then
