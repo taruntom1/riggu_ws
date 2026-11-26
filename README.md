@@ -32,13 +32,16 @@ Progress: [docs/STATUS.md](docs/STATUS.md). Plan: [docs/IMPLEMENTATION_PLAN.md](
 | `src/riggu_teleop` | Joystick, twist_mux, stop latch |
 | `docker/` | Jazzy + Gazebo dev/sim image, compose |
 | `scripts/` | Setup (robot/dev), env, deploy, docker run |
-| `config/` | zenoh profiles, udev rules |
+| `config/` | udev rules, Tailscale policy; zenoh profile notes |
+| `riggu.repos` | Source deps (`sllidar_ros2` for the C1) → `src/external/` |
 
 ## Quickstart
-Available after Phase 1.
 
 ```bash
-scripts/docker_run.sh                       # dev/sim container (GPU + WSLg/X11 auto-detected)
+scripts/docker_run.sh                       # dev/sim container (GPU + WSLg/X11/Wayland auto-detected)
+mkdir -p src/external && vcs import --input riggu.repos src/external
+colcon build --symlink-install            # inside the container
+scripts/deploy.sh --remote                  # build on the Pi (pull, rosdep, colcon)
 scripts/setup_local.sh --profile dev|robot  # native Ubuntu 24.04 install
 source scripts/env.sh sim|remote|robot      # zenoh profile
 ```
