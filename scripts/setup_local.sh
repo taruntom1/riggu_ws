@@ -101,6 +101,7 @@ set +u
 source /opt/ros/jazzy/setup.bash
 set -u
 log "Source dependencies (riggu.repos -> src/external)"
+mkdir -p "$WS/src/external"
 vcs import --input "$WS/riggu.repos" "$WS/src/external"
 skip=()
 [[ $PROFILE == robot ]] && skip=(--packages-skip riggu_gazebo)

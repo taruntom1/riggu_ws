@@ -64,6 +64,7 @@ source /opt/ros/jazzy/setup.bash
 set -u
 
 log "vcs import (riggu.repos)"
+mkdir -p src/external
 vcs import --input riggu.repos src/external
 
 log "rosdep install"

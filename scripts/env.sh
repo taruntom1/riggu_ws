@@ -45,6 +45,7 @@ _riggu_env() {
     source "$ws/install/setup.bash"
   fi
 
+  local previous="${RMW_IMPLEMENTATION:-}|${ZENOH_CONFIG_OVERRIDE:-}"
   export RMW_IMPLEMENTATION=rmw_zenoh_cpp
   export RIGGU_PROFILE=$profile
   unset ZENOH_SESSION_CONFIG_URI ZENOH_ROUTER_CONFIG_URI ZENOH_CONFIG_OVERRIDE
@@ -71,6 +72,11 @@ _riggu_env() {
       export ZENOH_CONFIG_OVERRIDE="mode=\"client\";connect/endpoints=[\"$endpoint\"]"
       echo "env.sh: remote zenoh client -> $endpoint" ;;
   esac
+
+  # A running ros2 daemon keeps its old middleware settings; restart it on change.
+  if [[ $previous != "rmw_zenoh_cpp|${ZENOH_CONFIG_OVERRIDE:-}" && $previous != "|" ]]; then
+    ros2 daemon stop &>/dev/null || true
+  fi
 }
 
 if ! (return 0 2>/dev/null); then

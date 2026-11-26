@@ -53,6 +53,7 @@ jobs:
           scripts/docker_run.sh --display none --gpu software bash -lc '
             set -e
             sudo apt-get update -qq
+            mkdir -p src/external
             vcs import --input riggu.repos src/external
             rosdep install --from-paths src --ignore-src --rosdistro jazzy -y
             colcon build --symlink-install --event-handlers console_direct+

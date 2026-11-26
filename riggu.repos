@@ -1,5 +1,5 @@
 # Source dependencies not available from apt. Import with:
-#   vcs import --input riggu.repos src/external
+#   mkdir -p src/external && vcs import --input riggu.repos src/external
 # sllidar_ros2: apt rplidar_ros (2.1.0) predates RPLIDAR C1 support.
 repositories:
   sllidar_ros2:
