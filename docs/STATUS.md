@@ -1,11 +1,11 @@
 # Status
 
-Updated 2026-11-26. Next phase: **0**. Run a phase with `/implement-phase <n>`.
+Updated 2026-11-26. Next phase: **1**. Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
-| 0 | Host tooling and repo | review | `phase/0-host-tooling` · [PR #1](https://github.com/taruntom1/riggu_ws/pull/1) |
-| 1 | Workspace, Docker, setup scripts, CI | todo | — |
+| 0 | Host tooling and repo | done | `phase/0-host-tooling` · [PR #1](https://github.com/taruntom1/riggu_ws/pull/1) |
+| 1 | Workspace, Docker, setup scripts, CI | in progress | `phase/1-workspace` |
 | 2 | Robot description (URDF) | todo | — |
 | 3 | Simulated drive | todo | — |
 | 4 | Real base bring-up | todo | — |
@@ -18,7 +18,6 @@ Updated 2026-11-26. Next phase: **0**. Run a phase with `/implement-phase <n>`.
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 0:** review and merge PR #1.
 - **Phase 2:** robot measurements (list at the end of `docs/REQUIREMENTS.md`).
 
 ## Known environment facts
