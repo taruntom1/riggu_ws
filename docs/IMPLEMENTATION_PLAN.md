@@ -81,12 +81,13 @@ Done when: the model in RViz matches the physical robot's layout (axle at the fr
 ## Phase 3 — Simulated drive
 
 Tasks
-- `riggu_gazebo`: indoor house world, `sim.launch.py` (gz sim, spawn, `ros_gz_bridge` for `/clock` and `/scan`).
+- `riggu_gazebo`: indoor house world (hand-written primitive SDF, 10×8 m, 4 rooms), `sim.launch.py` (gz sim, spawn, `ros_gz_bridge` for `/clock` and `/scan`).
 - Sensors:
   - Lidar: `gpu_lidar` matched to the C1 (10 Hz, 0.72°, 0.05–12 m, Gaussian noise).
   - IMU: through gz_ros2_control, with noise.
 - `riggu_bringup/config/controllers.yaml` (shared): `joint_state_broadcaster`, `imu_sensor_broadcaster`, `diff_drive_controller` with velocity interface, limits, `cmd_vel_timeout`. Wheel radius and separation come from `riggu_description/config/robot.yaml` (set by the launch file), not a second copy.
 - `riggu_bringup/launch/bringup.launch.py mode:=sim|real|mock`.
+- Until Phase 6, `diff_drive_controller` publishes `odom → base_footprint` (`enable_odom_tf: true`) and keyboard teleop publishes straight to `/cmd_vel_safe`.
 
 Done when: keyboard teleop drives the robot in Gazebo, `/scan`, `/imu`, and `/odom` are sane in RViz, and CI runs a `mock`-mode launch test.
 
@@ -132,8 +133,8 @@ Tasks
   - `odom0`: vx and vyaw from `/odom`.
   - `imu0`: vyaw plus absolute yaw.
   - The `use_imu_orientation` launch arg swaps in a gyro-only config.
-- `diff_drive_controller` `enable_odom_tf: false`.
-- Sim IMU gets bias and noise so the EKF tuning carries over.
+- `diff_drive_controller` `enable_odom_tf: false` (true since Phase 3, while no EKF exists).
+- Sim IMU bias and noise (added in Phase 3, values in `robot.yaml`) are checked against the tuned EKF.
 - Magnetic interference check: compare IMU yaw with odometry yaw while spinning the motors in place. Record the result and choose the default.
 
 Done when: after a 4 m square driven by joystick, the EKF ends closer to the start than raw wheel odometry, and the 360° spin error is under 3°.

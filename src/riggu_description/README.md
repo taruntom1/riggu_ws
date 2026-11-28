@@ -4,11 +4,11 @@ URDF/xacro model of riggu, generated from one dimensions file.
 
 | File | Purpose |
 |---|---|
-| `config/robot.yaml` | **All dimensions, masses, sensor poses and limits.** Each value is `{value, source, note}` |
+| `config/robot.yaml` | **All dimensions, masses, sensor poses and limits.** Each value is `{value, source, note}`. `riggu_bringup` reads `wheel.radius`, `wheel.separation` and `limits.*` for `diff_drive_controller` |
 | `urdf/riggu.urdf.xacro` | Top level. Args below |
 | `urdf/properties.xacro` | Loads `robot.yaml`, derives every frame offset (no raw numbers) |
-| `urdf/base.xacro` | `base_footprint`, `base_link` (chassis box), wheels, rear ball caster |
-| `urdf/sensors.xacro` | `laser` (RPLIDAR C1), `imu_link` (BNO055); gz `gpu_lidar` + `imu` in `sim` |
+| `urdf/base.xacro` | `base_footprint`, `base_link` (chassis box), wheels, rear ball caster. In `sim` the wheel collision is a sphere (cylinder edge contacts in DART turn ~7% too fast) |
+| `urdf/sensors.xacro` | `laser` (RPLIDAR C1), `imu_link` (BNO055); gz `gpu_lidar` + `imu` (noise and bias from `imu.*_stddev`) in `sim` |
 | `urdf/ros2_control.xacro` | `real`: DriveLink macro · `sim`: `gz_ros2_control/GazeboSimSystem` · `mock`: `mock_components/GenericSystem` |
 | `urdf/inertial.xacro` | Box / cylinder / sphere inertia macros |
 | `launch/display.launch.py` | robot_state_publisher, joint_state_publisher_gui, RViz |

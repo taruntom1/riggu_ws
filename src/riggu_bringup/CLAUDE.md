@@ -1,7 +1,9 @@
 # riggu_bringup
 
 - **Controllers:** `config/controllers.yaml` is shared by `real`, `sim`, and `mock`. Mode differences belong in the launch file only.
-- **Odometry TF:** set `diff_drive_controller` `enable_odom_tf: false`. The EKF owns `odom → base_footprint`.
+- **Odometry TF:** the EKF owns `odom → base_footprint` from Phase 6, with `diff_drive_controller` `enable_odom_tf: false`. Until then (Phase 3–5) it is `true`.
+- **Wheel params and limits** come from `riggu_description/config/robot.yaml`, passed by `bringup.launch.py` as spawner `--controller-ros-args=-p ...` (use the `=` form; a bare `-p` value is parsed as the spawner's `--param-file`). Never copy them into `controllers.yaml`.
+- **Velocity commands** are `geometry_msgs/TwistStamped` (Jazzy `diff_drive_controller`).
 - **Arming:** activating `diff_drive_controller` claims DriveLink command interfaces, which **arms the motors**. Deactivating it disarms them. Treat controller activation on the real robot as a motion-capable action.
 - **cmd_vel chain:** `twist_mux` → `/cmd_vel_mux` → `collision_monitor` → `/cmd_vel_safe` → `diff_drive_controller`. Nothing else publishes to the controller.
 - **EKF:**
