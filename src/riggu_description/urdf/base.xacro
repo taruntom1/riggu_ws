@@ -46,8 +46,18 @@
         <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
         <material name="wheel_black"/>
       </visual>
+      <!--
+        sim: a sphere touches the floor at one point under the wheel centre. A cylinder's
+        edge contacts in gz (DART) shift inboard and make in-place turns ~7% faster than
+        wheel.separation predicts.
+      -->
       <collision>
-        <geometry><cylinder radius="${wheel_radius}" length="${wheel_width}"/></geometry>
+        <geometry>
+          <xacro:if value="${mode == 'sim'}"><sphere radius="${wheel_radius}"/></xacro:if>
+          <xacro:unless value="${mode == 'sim'}">
+            <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+          </xacro:unless>
+        </geometry>
       </collision>
       <xacro:inertial_cylinder mass="${wheel_mass}" radius="${wheel_radius}" length="${wheel_width}">
         <origin xyz="0 0 0" rpy="0 0 0"/>
