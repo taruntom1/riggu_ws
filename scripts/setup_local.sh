@@ -91,7 +91,8 @@ if [[ $PROFILE == robot ]]; then
   "${APT[@]}" ros-jazzy-ros-base drivelink-agent drivelink-cli \
     bluez joystick chrony avahi-daemon libnss-mdns
 else
-  "${APT[@]}" ros-jazzy-desktop-full ros-jazzy-ros-gz ros-jazzy-gz-ros2-control ros-jazzy-nav2-bringup
+  "${APT[@]}" ros-jazzy-desktop-full ros-jazzy-ros-gz ros-jazzy-gz-ros2-control ros-jazzy-nav2-bringup \
+    ros-jazzy-joint-state-publisher-gui
 fi
 
 log "rosdep"
@@ -107,7 +108,8 @@ vcs import --input "$WS/riggu.repos" "$WS/src/external"
 skip=()
 [[ $PROFILE == robot ]] && skip=(--packages-skip riggu_gazebo)
 mapfile -t pkgs < <(colcon list --base-paths "$WS/src" --paths-only "${skip[@]}")
-rosdep install --from-paths "${pkgs[@]}" --ignore-src --rosdistro jazzy -y
+# drivelink_bringup comes from the DriveLink apt repo (installed above), not rosdistro.
+rosdep install --from-paths "${pkgs[@]}" --ignore-src --rosdistro jazzy -y --skip-keys drivelink_bringup
 
 # --- robot-only system setup ---------------------------------------------------
 if [[ $PROFILE == robot ]]; then

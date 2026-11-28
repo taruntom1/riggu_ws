@@ -40,6 +40,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-jazzy-drivelink-bringup \
  && rm -rf /var/lib/apt/lists/*
 
+# Dev-only GUI tools, kept off the Pi (riggu_description display.launch.py).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ros-jazzy-joint-state-publisher-gui \
+ && rm -rf /var/lib/apt/lists/*
+
 FROM base AS dev
 ARG DEBIAN_FRONTEND=noninteractive
 ARG USERNAME=riggu
