@@ -1,13 +1,13 @@
 # Status
 
-Updated 2026-11-28. Next phase: **3** (in progress). Run a phase with `/implement-phase <n>`.
+Updated 2026-11-28. Next phase: **3** (in review). Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
 | 0 | Host tooling and repo | done | `phase/0-host-tooling` · [PR #1](https://github.com/taruntom1/riggu_ws/pull/1) |
 | 1 | Workspace, Docker, setup scripts, CI | done | `phase/1-workspace` · [PR #2](https://github.com/taruntom1/riggu_ws/pull/2) |
 | 2 | Robot description (URDF) | done | `phase/2-description` · [PR #3](https://github.com/taruntom1/riggu_ws/pull/3) |
-| 3 | Simulated drive | in progress | `phase/3-sim-drive` |
+| 3 | Simulated drive | review | `phase/3-sim-drive` · [PR #4](https://github.com/taruntom1/riggu_ws/pull/4) |
 | 4 | Real base bring-up | todo | — |
 | 5 | Joystick, twist_mux, safety | todo | — |
 | 6 | EKF fusion | todo | — |
@@ -18,6 +18,7 @@ Updated 2026-11-28. Next phase: **3** (in progress). Run a phase with `/implemen
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
+- **Phase 3:** GUI check: keyboard teleop in Gazebo, and scan/odom in RViz (commands in PR #4). Then review and merge PR #4.
 - **Any time:** tape-measure the `source: estimate` values in `src/riggu_description/config/robot.yaml` (chassis, caster, IMU, wheel width) and weigh the robot.
 
 ## Known environment facts
