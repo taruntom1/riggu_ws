@@ -1,6 +1,6 @@
 # Status
 
-Updated 2026-11-28. Next phase: **6** (in review). Run a phase with `/implement-phase <n>`.
+Updated 2026-11-28. Next phase: **7** (in progress). Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
@@ -10,15 +10,15 @@ Updated 2026-11-28. Next phase: **6** (in review). Run a phase with `/implement-
 | 3 | Simulated drive | done | `phase/3-sim-drive` · [PR #4](https://github.com/taruntom1/riggu_ws/pull/4) |
 | 4 | Real base bring-up | done | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) |
 | 5 | Joystick, twist_mux, safety | done | `phase/5-teleop-safety` · [PR #6](https://github.com/taruntom1/riggu_ws/pull/6) |
-| 6 | EKF fusion | review | `phase/6-ekf` · [PR #8](https://github.com/taruntom1/riggu_ws/pull/8) |
-| 7 | Mapping and localisation | todo | — |
+| 6 | EKF fusion | done | `phase/6-ekf` · [PR #8](https://github.com/taruntom1/riggu_ws/pull/8) |
+| 7 | Mapping and localisation | in progress | `phase/7-mapping` |
 | 8 | Navigation | todo | — |
 | 9 | Hardening and docs | todo | — |
 
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 6:** review and merge the PR. The Pi runs `phase/6-ekf`; after the merge: `git checkout main && scripts/deploy.sh` on the Pi. `/etc/default/riggu-base` (`imu:=true`) is now redundant and can be removed.
+- **Pi:** `/etc/default/riggu-base` (`imu:=true`) is redundant since Phase 6 and can be removed.
 - **Phase 6, optional:** one fresh square + spin with `odom_check` to confirm the gyro scale out of sample (the replay's spin is in-sample).
 - **USB EMI:** both the C1 and the DriveLink USB links dropped once under motor load; secure and shield the cables (ferrites, routing away from motor wiring).
 - **Any time:** tape-measure the `source: estimate` values in `src/riggu_description/config/robot.yaml` (chassis, caster, IMU, wheel width) and weigh the robot.
