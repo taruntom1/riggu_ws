@@ -57,6 +57,10 @@ if [[ $PULL == 1 ]]; then
   git pull --ff-only
 fi
 
+# Build against Jazzy only. A shell that already sourced another workspace (e.g. from
+# ~/.bashrc) would be chained into install/setup.sh, and riggu-base would load its packages.
+unset AMENT_PREFIX_PATH CMAKE_PREFIX_PATH COLCON_PREFIX_PATH PYTHONPATH LD_LIBRARY_PATH \
+  ROS_PACKAGE_PATH
 # ROS setup scripts reference unset variables.
 set +u
 # shellcheck source=/dev/null
