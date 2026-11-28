@@ -70,3 +70,6 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
 - **Phase 4, calibration:** wheel radius 0.06374 m, separation 0.3853 m (`calibrated`); verification 1 % straight, 0.2 % turns. Lidar yaw 0 verified (`measured`).
 - **Phase 4, recovery:** `drivelink_diagnostics` `recovery_controllers` excludes `diff_drive_controller`, so `recover` never arms (same rule as launch).
 - **Phase 4, IMU check 3:** deferred until the BNO055 is fitted (before Phase 6).
+- **Phase 5, arming:** the pad arms (deadman + Options held 1 s → `diff_drive_controller` active) and disarms (Share) through `riggu_teleop/arm_switch`; boot and launch stay disarmed (user's choice).
+- **Phase 5, collision monitor:** baseline is one `approach` polygon (footprint from `robot.yaml` + 3 cm, 1 s horizon); a stale `/scan` stops. Joystick bypass is the launch arg `collision_check_joy:=false` (monitor moves onto `/cmd_vel_nav`). Mock disables the scan timeout.
+- **Phase 5, `/estop`:** a 10 Hz heartbeat with a 0.5 s twist_mux lock timeout, so a dead `stop_latch` locks the output. `~/set` (SetBool) latches it from the laptop.

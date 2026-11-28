@@ -1,45 +1,52 @@
 # riggu_bringup
 
-Top-level bring-up for the real robot, the simulation, and mock hardware: RSP, ros2_control, controllers; on `real` also the C1 lidar and DriveLink diagnostics. EKF, teleop and collision monitor come in Phases 5–6.
+Top-level bring-up for the real robot, the simulation, and mock hardware: RSP, ros2_control, controllers, the cmd_vel chain (riggu_teleop + collision monitor); on `real` also the C1 lidar, DriveLink diagnostics and the pad. EKF comes in Phase 6.
 
 | File | Purpose |
 |---|---|
-| `launch/bringup.launch.py` | RSP + `ros2_control_node` (real/mock; in sim gz runs it) + spawners. `real`: + `sllidar_node` (respawn), `drivelink_bringup/diagnostics`, `diff_drive_controller` loaded **inactive**. Args: `mode:=real\|sim\|mock` (default `mock`), `imu:=true\|false` (false: the `imu` sensor is stripped from the expanded ros2_control block and `imu_sensor_broadcaster` is not spawned), `use_sim_time`, `robot_config`, `lidar_config`, `drivelink_agent` (`tcp://127.0.0.1:47620`), `drivelink_device` (`base`), `drivelink_token_file` (`/etc/drivelink/token`), `drivelink_{left,right}_label` (`pid_left`, `pid_right`) |
+| `launch/bringup.launch.py` | RSP + `ros2_control_node` (real/mock; in sim gz runs it) + spawners. `real`: + `sllidar_node` (respawn), `drivelink_bringup/diagnostics`, `diff_drive_controller` loaded **inactive**. Args: `mode:=real\|sim\|mock` (default `mock`), `imu:=true\|false` (false: the `imu` sensor is stripped from the expanded ros2_control block and `imu_sensor_broadcaster` is not spawned), `use_sim_time`, `robot_config`, `lidar_config`, `drivelink_agent` (`tcp://127.0.0.1:47620`), `drivelink_device` (`base`), `drivelink_token_file` (`/etc/drivelink/token`), `drivelink_{left,right}_label` (`pid_left`, `pid_right`); chain: `joy`, `arm` (`auto`: on for `real` only), `collision_check_joy` (`true`; `false`: joystick bypasses the monitor), `collision_monitor_config` |
 | `config/controllers.yaml` | `joint_state_broadcaster`, `imu_sensor_broadcaster`, `diff_drive_controller` (velocity, 50 Hz, `cmd_vel_timeout` 0.5 s). Shared by all modes |
+| `config/collision_monitor.yaml` | nav2 `collision_monitor`: one `approach` polygon (1 s ahead) on `/scan`; stale scan (> 1 s) = stop. Footprint (`FootprintApproach.points`) = chassis + wheels from `robot.yaml` + `riggu_footprint.margin`, set by the launch. `mode:=mock`: `scan.source_timeout` 0 (no lidar) |
 | `config/lidar.yaml` | `sllidar_node`: C1 on `/dev/rplidar`, 460800 baud, frame `laser`, `Standard` mode |
 | `scripts/calibrate_wheels.py` | `ros2 run riggu_bringup calibrate_wheels straight <m>\|turns <n>`: wheel angles from `/joint_states` between two Enters → odom error and calibrated `wheel.radius` / `wheel.separation`. Prints only |
-| `test/test_bringup_launch.py`, `test/test_calibrate_wheels.py` | pytest: drive spawner `--inactive` only on `real`; `imu:=false` description; calibration maths |
-| `test/test_bringup_mock.py` | launch_test, `mode:=mock`: 3 controllers active, `/joint_states`, `/imu`, `/cmd_vel_safe` → `/odom`, timeout brakes. `ROS_DOMAIN_ID=87` |
+| `test/test_bringup_launch.py`, `test/test_calibrate_wheels.py` | pytest: drive spawner `--inactive` only on `real`; `imu:=false` description; chain wiring and bypass; footprint; calibration maths |
+| `test/test_bringup_mock.py` | launch_test, `mode:=mock joy:=true arm:=true`: 3 controllers active, `/joint_states`, `/imu`; `/cmd_vel_nav` → chain → `/odom`, timeout brakes; fake `/joy`: deadman, joy beats nav, stop latch, pad disarm/arm. `ROS_DOMAIN_ID=87` |
 | `systemd/rmw-zenohd.service` | Zenoh router on the Pi (rmw_zenoh default config, `tcp/[::]:7447`). Installed and enabled by `setup_local.sh --profile robot` |
+| `systemd/riggu-base.service` | `bringup.launch.py mode:=real $RIGGU_BRINGUP_ARGS` on boot (default `imu:=false`; override in `/etc/default/riggu-base`), after `rmw-zenohd`, `drivelink-agent`, `bluetooth`. Comes up **disarmed**. Enabled by `setup_local.sh`, restarted by `deploy.sh` |
 
-Planned: `config/ekf.yaml`, `config/ekf_gyro_only.yaml` (Phase 6), `config/collision_monitor.yaml` (Phase 5), `systemd/riggu-base.service` (Phase 5).
+Planned: `config/ekf.yaml`, `config/ekf_gyro_only.yaml` (Phase 6).
 
 **Controller wiring** (spawner args in the launch file, not the yaml):
 - `wheel_radius`, `wheel_separation` and the linear/angular velocity and acceleration limits come from `riggu_description/config/robot.yaml` (`wheel.*`, `limits.*`).
 - `diff_drive_controller`: `~/cmd_vel` ← `/cmd_vel_safe` (`TwistStamped`), `~/odom` → `/odom`. `imu_sensor_broadcaster`: `~/imu` → `/imu`.
 - **TF:** until the Phase 6 EKF, `diff_drive_controller` publishes `odom → base_footprint` (`enable_odom_tf: true`).
 
-**cmd_vel chain** (from Phase 5; until then teleop publishes straight to `/cmd_vel_safe`)
+**cmd_vel chain**
 
 ```
 /cmd_vel_joy ┐
 /cmd_vel_nav ┴→ twist_mux → /cmd_vel_mux → collision_monitor → /cmd_vel_safe → diff_drive_controller
 /estop (lock) ┘
+collision_check_joy:=false:  /cmd_vel_nav → collision_monitor → /cmd_vel_nav_checked → twist_mux → /cmd_vel_safe
 ```
+
+- The approach polygon slows and stops only motion that would hit within 1 s; moving away stays free. An obstacle already *inside* the footprint blocks every direction: drive out with `collision_check_joy:=false`.
+- Lidar data older than 1 s (C1 USB drop) stops the robot until scans return.
 
 ```bash
 ros2 launch riggu_bringup bringup.launch.py mode:=mock
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args \
-  -p stamped:=true -p frame_id:=base_footprint -r cmd_vel:=/cmd_vel_safe
+  -p stamped:=true -p frame_id:=base_footprint -r cmd_vel:=/cmd_vel_joy
 ```
 
 ## Real robot
 
-`mode:=real` loads `diff_drive_controller` inactive: the board stays disarmed until you activate it. Activating arms the motors. After a DriveLink link loss the hardware goes `unconfigured`; `/drivelink_diagnostics/recover` (or `ros2 control set_hardware_component_state drivelink active`) restores it and the broadcasters, still disarmed.
+`mode:=real` loads `diff_drive_controller` inactive: the board stays disarmed until you activate it, from the pad (L1 + Options for 1 s; Share disarms, see `riggu_teleop`) or with `switch_controllers`. Activating arms the motors. After a DriveLink link loss the hardware goes `unconfigured`; `/drivelink_diagnostics/recover` (or `ros2 control set_hardware_component_state drivelink active`) restores it and the broadcasters, still disarmed.
 
 ```bash
-# Pi (source scripts/env.sh robot)
-ros2 launch riggu_bringup bringup.launch.py mode:=real imu:=false   # until the BNO055 is fitted
+# Pi (source scripts/env.sh robot). On boot riggu-base.service runs the bringup:
+sudo systemctl status riggu-base; journalctl -u riggu-base -f
+ros2 launch riggu_bringup bringup.launch.py mode:=real imu:=false   # by hand: stop riggu-base first
 ros2 control switch_controllers --activate diff_drive_controller --strict    # ARMS
 ros2 control switch_controllers --deactivate diff_drive_controller --strict  # disarms
 ros2 topic echo /diagnostics --once        # online, lease holder, arm state, faults
@@ -48,7 +55,7 @@ ros2 service call /drivelink_diagnostics/recover std_srvs/srv/Trigger '{}'  # af
 
 # Laptop, in the container (source scripts/env.sh remote)
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args \
-  -p stamped:=true -p frame_id:=base_footprint -p speed:=0.1 -p turn:=0.5 -r cmd_vel:=/cmd_vel_safe
+  -p stamped:=true -p frame_id:=base_footprint -p speed:=0.1 -p turn:=0.5 -r cmd_vel:=/cmd_vel_joy
 rviz2 -d "$(ros2 pkg prefix riggu_gazebo)/share/riggu_gazebo/rviz/sim.rviz"
 ```
 

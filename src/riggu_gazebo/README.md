@@ -20,7 +20,9 @@ Gazebo Harmonic simulation of riggu. Dev-only: `setup_local.sh` and `deploy.sh` 
 ros2 launch riggu_gazebo sim.launch.py                 # GUI + RViz
 ros2 launch riggu_gazebo sim.launch.py headless:=true  # server only, headless rendering
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args \
-  -p stamped:=true -p frame_id:=base_footprint -r cmd_vel:=/cmd_vel_safe
+  -p stamped:=true -p frame_id:=base_footprint -p use_sim_time:=true -r cmd_vel:=/cmd_vel_joy
 ```
+
+The full cmd_vel chain runs in sim (twist_mux, stop latch, collision monitor on the sim `/scan`); keyboard teleop stands in for the pad on `/cmd_vel_joy`.
 
 Wheels collide as spheres in sim (see `riggu_description`), so in-place turns match `wheel.separation`.
