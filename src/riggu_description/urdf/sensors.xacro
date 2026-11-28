@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<!-- RPLIDAR C1 (laser) and BNO055 (imu_link), plus gz sensors in sim mode. -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <material name="lidar_black"><color rgba="0.12 0.12 0.12 1"/></material>
+  <material name="imu_blue"><color rgba="0.1 0.3 0.8 1"/></material>
+
+  <!-- laser: origin on the optical plane, x = scan angle 0 -->
+  <joint name="laser_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="laser"/>
+    <origin xyz="${lidar.x_from_axle.value} ${lidar.y_from_centreline.value} ${laser_z}"
+            rpy="0 0 ${lidar.yaw.value}"/>
+  </joint>
+
+  <link name="laser">
+    <visual>
+      <origin xyz="0 0 ${lidar_body_z}" rpy="0 0 0"/>
+      <geometry><box size="${lidar.size.value} ${lidar.size.value} ${lidar.height.value}"/></geometry>
+      <material name="lidar_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${lidar_body_z}" rpy="0 0 0"/>
+      <geometry><box size="${lidar.size.value} ${lidar.size.value} ${lidar.height.value}"/></geometry>
+    </collision>
+    <xacro:inertial_box mass="${lidar.mass.value}" x="${lidar.size.value}" y="${lidar.size.value}" z="${lidar.height.value}">
+      <origin xyz="0 0 ${lidar_body_z}" rpy="0 0 0"/>
+    </xacro:inertial_box>
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="${imu.x_from_axle.value} ${imu.y_from_centreline.value} ${imu_z}"
+            rpy="${imu.roll.value} ${imu.pitch.value} ${imu.yaw.value}"/>
+  </joint>
+
+  <!-- Visual only: a small board marker; mass is part of the chassis -->
+  <link name="imu_link">
+    <visual>
+      <geometry><box size="0.02 0.015 0.003"/></geometry>
+      <material name="imu_blue"/>
+    </visual>
+  </link>
+
+  <xacro:if value="${mode == 'sim'}">
+    <gazebo reference="laser">
+      <sensor name="laser" type="gpu_lidar">
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <update_rate>${lidar.rate.value}</update_rate>
+        <topic>scan</topic>
+        <gz_frame_id>laser</gz_frame_id>
+        <lidar>
+          <scan>
+            <horizontal>
+              <samples>${lidar.samples.value}</samples>
+              <resolution>1</resolution>
+              <min_angle>${-pi}</min_angle>
+              <max_angle>${pi - 2 * pi / lidar.samples.value}</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>${lidar.range_min.value}</min>
+            <max>${lidar.range_max.value}</max>
+            <resolution>0.01</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>${lidar.noise_stddev.value}</stddev>
+          </noise>
+        </lidar>
+      </sensor>
+    </gazebo>
+
+    <!-- Read by gz_ros2_control through the ros2_control <sensor name="imu"> -->
+    <gazebo reference="imu_link">
+      <sensor name="imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>${imu.rate.value}</update_rate>
+        <gz_frame_id>imu_link</gz_frame_id>
+      </sensor>
+    </gazebo>
+  </xacro:if>
+</robot>
