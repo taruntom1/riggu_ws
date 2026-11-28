@@ -5,6 +5,7 @@
 - **Wheel params and limits** come from `riggu_description/config/robot.yaml`, passed by `bringup.launch.py` as spawner `--controller-ros-args=-p ...` (use the `=` form; a bare `-p` value is parsed as the spawner's `--param-file`). Never copy them into `controllers.yaml`.
 - **Velocity commands** are `geometry_msgs/TwistStamped` (Jazzy `diff_drive_controller`).
 - **Arming:** activating `diff_drive_controller` claims DriveLink command interfaces, which **arms the motors**. Deactivating it disarms them. `mode:=real` therefore spawns it `--inactive`; never make real-mode launch activate it. Treat activation (and `drivelink_diagnostics/recover`) on the real robot as a motion-capable action.
+- **IMU optional:** `imu:=false` removes `<sensor name="imu">` from the xacro output in `bringup.launch.py` (DriveLink refuses a configured-but-missing instance, and its macro always emits the sensor). Don't copy the DriveLink block to avoid it; drop the strip once DriveLink's macro can omit the IMU.
 - **real-only nodes:** `sllidar_node` (`config/lidar.yaml`) and `drivelink_bringup/diagnostics`; their DriveLink connection args are shared with the xacro through `drivelink_*` launch args.
 - **cmd_vel chain:** `twist_mux` → `/cmd_vel_mux` → `collision_monitor` → `/cmd_vel_safe` → `diff_drive_controller`. Nothing else publishes to the controller.
 - **EKF:**

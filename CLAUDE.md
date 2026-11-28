@@ -30,6 +30,7 @@ ROS 2 **Jazzy** workspace for *riggu*, a differential-drive robot.
 - **Sim and real share configs.** They differ only through `mode:=real|sim|mock` and `use_sim_time`.
 - **Frames follow REP-105.** Topic names and the cmd_vel chain are in the plan's "Cross-cutting conventions".
 - **Real-robot safety:** ask the user before anything that arms DriveLink or moves the robot. The first motion of any new config runs with the wheels off the ground.
+- **Old workspaces are off limits:** never read, copy from, or run anything in older riggu workspaces (`~/riggu_ws_v2` on the Pi, `riggu_ws_old`). The robot was overhauled; their values are stale. Ask the user for physical values.
 - **No secrets in the repo:** never commit DriveLink tokens (`/etc/drivelink/token`) or keys.
 - **Ambiguity:** ask the user, with options and a recommendation.
 - **Docs:** READMEs are terse and written for experts. Update the module `README.md` and `CLAUDE.md` when behaviour changes.

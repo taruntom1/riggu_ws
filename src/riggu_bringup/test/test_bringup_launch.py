@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""bringup.launch.py: mode:=real loads diff_drive_controller inactive (no arming on launch)."""
+"""bringup.launch.py: real loads the drive inactive; imu:=false drops the IMU sensor."""
 
 import importlib.util
 from pathlib import Path
 
+from xml.dom import minidom
+
 from launch import LaunchContext
+from launch.substitutions import TextSubstitution
 import pytest
 
 PKG = Path(__file__).resolve().parents[1]
@@ -45,3 +48,31 @@ def test_wheel_params_from_robot_yaml():
     args = ' '.join(drive_args('real'))
     assert '--controller-ros-args=-p wheel_radius:=' in args
     assert '--controller-ros-args=-r ~/cmd_vel:=/cmd_vel_safe' in args
+
+
+def description(mode, imu):
+    context = LaunchContext()
+    context.launch_configurations.update({
+        'mode': mode, 'imu': imu, 'robot_config': str(ROBOT_YAML),
+        'drivelink_agent': 'tcp://127.0.0.1:47620', 'drivelink_device': 'base',
+        'drivelink_token_file': '/etc/drivelink/token'})
+    return minidom.parseString(
+        bringup.robot_description(context, TextSubstitution(text='controllers.yaml')))
+
+
+def ros2_control_sensors(doc):
+    return [s.getAttribute('name') for block in doc.getElementsByTagName('ros2_control')
+            for s in block.getElementsByTagName('sensor')]
+
+
+@pytest.mark.parametrize('mode', ['real', 'mock'])
+def test_imu_optional(mode):
+    with_imu, without = description(mode, 'true'), description(mode, 'false')
+    assert ros2_control_sensors(with_imu) == ['imu']
+    assert ros2_control_sensors(without) == []
+    joints = [j.getAttribute('name') for b in without.getElementsByTagName('ros2_control')
+              for j in b.getElementsByTagName('joint')]
+    assert joints == ['left_wheel_joint', 'right_wheel_joint']
+    # the imu_link frame stays in the model
+    assert 'imu_link' in [link.getAttribute('name')
+                          for link in without.getElementsByTagName('link')]

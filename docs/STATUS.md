@@ -1,6 +1,6 @@
 # Status
 
-Updated 2026-11-28. Next phase: **4** (blocked: Pi offline). Run a phase with `/implement-phase <n>`.
+Updated 2026-11-28. Next phase: **4** (in progress). Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
@@ -8,7 +8,7 @@ Updated 2026-11-28. Next phase: **4** (blocked: Pi offline). Run a phase with `/
 | 1 | Workspace, Docker, setup scripts, CI | done | `phase/1-workspace` · [PR #2](https://github.com/taruntom1/riggu_ws/pull/2) |
 | 2 | Robot description (URDF) | done | `phase/2-description` · [PR #3](https://github.com/taruntom1/riggu_ws/pull/3) |
 | 3 | Simulated drive | done | `phase/3-sim-drive` · [PR #4](https://github.com/taruntom1/riggu_ws/pull/4) |
-| 4 | Real base bring-up | blocked (Pi offline) | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) (draft) |
+| 4 | Real base bring-up | in progress | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) (draft) |
 | 5 | Joystick, twist_mux, safety | todo | — |
 | 6 | EKF fusion | todo | — |
 | 7 | Mapping and localisation | todo | — |
@@ -18,7 +18,7 @@ Updated 2026-11-28. Next phase: **4** (blocked: Pi offline). Run a phase with `/
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 4:** Pi unreachable on 2026-11-28 (Tailscale shows it, SSH times out): power it on / check its network. Then hardware checks with you watching (wheels off the ground first).
+- **Phase 4:** configure DriveLink in the app: two chains, controller labels `left`/`right`, cpr/gear ratio, polarity, PID, low duty cap; save. Then hardware checks with you watching (wheels off the ground first). BNO055 to be fitted for check 3.
 - **Any time:** tape-measure the `source: estimate` values in `src/riggu_description/config/robot.yaml` (chassis, caster, IMU, wheel width) and weigh the robot.
 
 ## Known environment facts
@@ -63,3 +63,4 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
 - **Phase 3, params:** wheel radius/separation and velocity/acceleration limits (new `limits.max_*_accel`, estimates) go from `robot.yaml` to `diff_drive_controller` as spawner `--controller-ros-args`. Sim IMU noise/bias values added to `robot.yaml`.
 - **Phase 4, arming:** `mode:=real` loads `diff_drive_controller` inactive (as DriveLink's example does); arming is an explicit `switch_controllers --activate` (user's choice). DriveLink `diagnostics` runs in real mode for fault ack/recover.
 - **Phase 4, agent bind:** `0.0.0.0:47620` (token-protected), plus a portproxy `127.0.0.1:47620` rule for the offline path (user's choice). Config template `config/drivelink/agent.json`.
+- **Phase 4, IMU:** BNO055 not fitted yet. `bringup.launch.py imu:=false` strips the `imu` sensor from the expanded DriveLink block and skips `imu_sensor_broadcaster`; a DriveLink issue asks for an optional IMU in the macro (user's choice: both). IMU check 3 waits for the IMU.
