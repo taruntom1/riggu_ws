@@ -1,7 +1,7 @@
 # riggu base bring-up on boot: ros2_control + DriveLink (disarmed), lidar, collision
 # monitor, twist_mux, pad teleop and pad arming. Installed by scripts/setup_local.sh,
 # which replaces @USER@ and @WS@. Extra launch args: RIGGU_BRINGUP_ARGS in
-# /etc/default/riggu-base (default here: imu:=false until the BNO055 is fitted).
+# /etc/default/riggu-base (e.g. imu:=false without the BNO055, use_imu_orientation:=false).
 [Unit]
 Description=riggu base bring-up
 Wants=rmw-zenohd.service drivelink-agent.service bluetooth.service network-online.target
@@ -10,7 +10,7 @@ After=rmw-zenohd.service drivelink-agent.service bluetooth.service network-onlin
 [Service]
 Type=simple
 User=@USER@
-Environment=RIGGU_BRINGUP_ARGS=imu:=false
+Environment=RIGGU_BRINGUP_ARGS=
 EnvironmentFile=-/etc/default/riggu-base
 ExecStart=/bin/bash -c 'source @WS@/scripts/env.sh robot && exec ros2 launch riggu_bringup bringup.launch.py mode:=real $RIGGU_BRINGUP_ARGS'
 KillSignal=SIGINT

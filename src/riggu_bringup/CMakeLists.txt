@@ -8,6 +8,9 @@ install(DIRECTORY config launch systemd
 install(PROGRAMS scripts/calibrate_wheels.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME calibrate_wheels)
+install(PROGRAMS scripts/odom_check.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME odom_check)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -21,6 +24,7 @@ if(BUILD_TESTING)
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_pytest_test(test_calibrate_wheels test/test_calibrate_wheels.py)
   ament_add_pytest_test(test_bringup_launch test/test_bringup_launch.py)
+  ament_add_pytest_test(test_odom_check test/test_odom_check.py)
 endif()
 
 ament_package()

@@ -1,6 +1,6 @@
 # Status
 
-Updated 2026-11-28. Next phase: **5** (in review). Run a phase with `/implement-phase <n>`.
+Updated 2026-11-28. Next phase: **6** (in progress). Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
@@ -9,8 +9,8 @@ Updated 2026-11-28. Next phase: **5** (in review). Run a phase with `/implement-
 | 2 | Robot description (URDF) | done | `phase/2-description` · [PR #3](https://github.com/taruntom1/riggu_ws/pull/3) |
 | 3 | Simulated drive | done | `phase/3-sim-drive` · [PR #4](https://github.com/taruntom1/riggu_ws/pull/4) |
 | 4 | Real base bring-up | done | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) |
-| 5 | Joystick, twist_mux, safety | review | `phase/5-teleop-safety` · [PR #6](https://github.com/taruntom1/riggu_ws/pull/6) |
-| 6 | EKF fusion | todo | — |
+| 5 | Joystick, twist_mux, safety | done | `phase/5-teleop-safety` · [PR #6](https://github.com/taruntom1/riggu_ws/pull/6) |
+| 6 | EKF fusion | in progress | `phase/6-ekf` |
 | 7 | Mapping and localisation | todo | — |
 | 8 | Navigation | todo | — |
 | 9 | Hardening and docs | todo | — |

@@ -26,6 +26,10 @@ that is always an explicit `ros2 control switch_controllers --activate`.
 imu:=false drops the `imu` sensor from the expanded ros2_control block and the
 imu_sensor_broadcaster (robot without an IMU; DriveLink refuses a missing instance).
 
+robot_localization ekf_node (every mode) owns odom -> base_footprint and publishes
+/odometry/filtered from /odom and /imu (config/ekf.yaml). use_imu_orientation:=false
+fuses the gyro only (config/ekf_gyro_only.yaml); imu:=false fuses wheel odometry only.
+
 cmd_vel chain (riggu_teleop/teleop.launch.py + nav2 collision_monitor):
   /cmd_vel_joy, /cmd_vel_nav, /estop -> twist_mux -> /cmd_vel_mux -> collision_monitor
     -> /cmd_vel_safe -> diff_drive_controller
@@ -96,6 +100,29 @@ def launch_setup(context, controllers, use_sim_time):
                                                   'recovery_controllers': recovery}],
                           output='screen'))
     return nodes
+
+
+def ekf_params(context):
+    """ekf.yaml params, with the gyro-only overrides and without the IMU as the args ask."""
+    def arg(name):
+        return LaunchConfiguration(name).perform(context)
+
+    def load(path):
+        with open(path, encoding='utf-8') as f:
+            return yaml.safe_load(f)['ekf_filter_node']['ros__parameters']
+    params = load(arg('ekf_config'))
+    if arg('use_imu_orientation') != 'true':
+        params.update(load(arg('ekf_gyro_only_config')))
+    if arg('imu') != 'true':
+        params = {k: v for k, v in params.items() if not k.startswith('imu0')}
+    return params
+
+
+def ekf(context, use_sim_time):
+    """robot_localization ekf_node: odom -> base_footprint, /odometry/filtered."""
+    return [Node(package='robot_localization', executable='ekf_node', name='ekf_filter_node',
+                 parameters=[ekf_params(context), {'use_sim_time': use_sim_time}],
+                 output='screen')]
 
 
 def footprint(robot, margin):
@@ -224,6 +251,18 @@ def generate_launch_description():
             default_value=PathJoinSubstitution(
                 [FindPackageShare('riggu_bringup'), 'config', 'lidar.yaml']),
             description='real: sllidar_node params'),
+        DeclareLaunchArgument('use_imu_orientation', default_value='true',
+                              choices=['true', 'false'],
+                              description='EKF: fuse IMU absolute yaw (false: gyro only)'),
+        DeclareLaunchArgument(
+            'ekf_config',
+            default_value=PathJoinSubstitution(
+                [FindPackageShare('riggu_bringup'), 'config', 'ekf.yaml'])),
+        DeclareLaunchArgument(
+            'ekf_gyro_only_config',
+            default_value=PathJoinSubstitution(
+                [FindPackageShare('riggu_bringup'), 'config', 'ekf_gyro_only.yaml']),
+            description='overrides on ekf_config for use_imu_orientation:=false'),
         DeclareLaunchArgument('joy', default_value='auto', choices=['auto', 'true', 'false'],
                               description='joy_node + teleop_twist_joy (auto: real only)'),
         DeclareLaunchArgument('arm', default_value='auto', choices=['auto', 'true', 'false'],
@@ -238,6 +277,7 @@ def generate_launch_description():
 
         OpaqueFunction(function=launch_setup, args=[controllers, use_sim_time]),
         OpaqueFunction(function=cmd_vel_chain, args=[use_sim_time]),
+        OpaqueFunction(function=ekf, args=[use_sim_time]),
 
         # real and mock; in sim the controller manager lives in Gazebo
         Node(package='controller_manager', executable='ros2_control_node',

@@ -31,8 +31,8 @@ diff_drive_controller:
 
     odom_frame_id: odom
     base_frame_id: base_footprint
-    # Until the Phase 6 EKF owns odom -> base_footprint; Phase 6 sets this to false.
-    enable_odom_tf: true
+    # The EKF (ekf.yaml) owns odom -> base_footprint; this only publishes /odom.
+    enable_odom_tf: false
     publish_rate: 50.0
     open_loop: false
     position_feedback: true

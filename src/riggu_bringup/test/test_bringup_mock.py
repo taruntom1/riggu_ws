@@ -16,6 +16,7 @@
 bringup.launch.py mode:=mock: controllers, then the cmd_vel chain end to end.
 
 /cmd_vel_nav and a fake /joy go through twist_mux -> collision_monitor -> /cmd_vel_safe;
+the EKF follows /odom on /odometry/filtered and owns the odom -> base_footprint TF;
 the pad nodes and the arm switch run (joy:=true arm:=true) on the test's /joy.
 Button and axis indices come from riggu_teleop/config/joy_generic.yaml.
 """
@@ -36,6 +37,7 @@ from nav_msgs.msg import Odometry
 import pytest
 import rclpy
 from sensor_msgs.msg import Imu, JointState, Joy
+from tf2_msgs.msg import TFMessage
 import yaml
 
 CONTROLLERS = {'joint_state_broadcaster', 'imu_sensor_broadcaster', 'diff_drive_controller'}
@@ -68,9 +70,15 @@ class TestBringupMock(unittest.TestCase):
         cls.node = rclpy.create_node('test_bringup_mock')
         cls.latest = {}
         for topic, msg_type in (('/joint_states', JointState), ('/imu', Imu),
-                                ('/odom', Odometry)):
+                                ('/odom', Odometry), ('/odometry/filtered', Odometry)):
             cls.node.create_subscription(
                 msg_type, topic, lambda msg, t=topic: cls.latest.__setitem__(t, msg), 10)
+        cls.tf_latest = {}
+
+        def on_tf(msg):
+            for t in msg.transforms:
+                cls.tf_latest[(t.header.frame_id, t.child_frame_id)] = t
+        cls.node.create_subscription(TFMessage, '/tf', on_tf, 50)
         cls.nav = cls.node.create_publisher(TwistStamped, '/cmd_vel_nav', 10)
         cls.joy = cls.node.create_publisher(Joy, '/joy', 10)
 
@@ -157,6 +165,26 @@ class TestBringupMock(unittest.TestCase):
         self.assertAlmostEqual(odom.pose.pose.position.y, 0.0, delta=0.02)
         # twist_mux / cmd_vel_timeout stop the robot once commands stop
         self.wait_stopped()
+
+        # EKF: follows the wheels (mock IMU reads zero rate and identity orientation)
+        self.spin_until(lambda: '/odometry/filtered' in self.latest, 5)
+        filtered = self.latest.get('/odometry/filtered')
+        self.assertIsNotNone(filtered, 'no /odometry/filtered')
+        self.assertEqual(filtered.header.frame_id, 'odom')
+        self.assertEqual(filtered.child_frame_id, 'base_footprint')
+        self.spin_until(lambda: abs(self.latest['/odometry/filtered'].pose.pose.position.x
+                                    - self.latest['/odom'].pose.pose.position.x) < 0.05, 5)
+        ekf_x = self.latest['/odometry/filtered'].pose.pose.position.x
+        self.assertAlmostEqual(ekf_x, self.latest['/odom'].pose.pose.position.x, delta=0.05)
+
+        # TF odom -> base_footprint is the EKF's (diff_drive_controller enable_odom_tf: false)
+        tf = self.spin_until(lambda: self.odom_tf(), 5)
+        self.assertTrue(tf, 'no odom -> base_footprint TF')
+        self.assertAlmostEqual(tf.transform.translation.x, ekf_x, delta=0.05)
+
+    def odom_tf(self):
+        """Latest odom -> base_footprint transform on /tf, or None."""
+        return self.tf_latest.get(('odom', 'base_footprint'))
 
     def test_4_joy_needs_deadman_and_beats_nav(self):
         self.drive(1.5, nav=0.2, linear_axis=-0.5)  # stick without deadman: nav drives

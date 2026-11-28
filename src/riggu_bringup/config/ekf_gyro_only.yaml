@@ -1,0 +1,10 @@
+# Overrides on top of ekf.yaml for use_imu_orientation:=false: the IMU contributes vyaw
+# only (gyro), no absolute yaw. Use it where the motors' magnets disturb BNO055 heading.
+
+ekf_filter_node:
+  ros__parameters:
+    imu0_config: [false, false, false,
+                  false, false, false,
+                  false, false, false,
+                  false, false, true,
+                  false, false, false]
