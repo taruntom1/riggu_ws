@@ -7,3 +7,5 @@
   - IMU: noise and bias.
   - Specs are defined once, in the description's sim sensor xacro.
 - `sim.launch.py` supports `headless:=true` for CI. Bridge only `/clock` and `/scan`; the IMU comes through ros2_control.
+- **World:** `worlds/house.sdf` is hand-written primitives (no Fuel). Keep doorways ≥ 0.8 m and walls above the lidar plane; Phases 7–8 map and navigate in it. Furniture must stay clear of the default spawn `2.5 -1.5`.
+- **Headless checks:** `headless:=true` runs `gz sim -s --headless-rendering`; verify by reading topics, TF and `gz model -m riggu -p` (ground truth).

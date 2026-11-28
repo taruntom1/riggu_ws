@@ -1,0 +1,43 @@
+# ros2_control controllers, shared by mode:=real|sim|mock.
+# Wheel radius/separation and velocity/acceleration limits are NOT here: bringup.launch.py
+# reads them from riggu_description/config/robot.yaml and passes them to the spawner.
+# Topic remaps (also in bringup.launch.py): ~/cmd_vel <- /cmd_vel_safe, ~/odom -> /odom,
+# imu_sensor_broadcaster ~/imu -> /imu.
+
+controller_manager:
+  ros__parameters:
+    update_rate: 50  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+    imu_sensor_broadcaster:
+      type: imu_sensor_broadcaster/IMUSensorBroadcaster
+    diff_drive_controller:
+      type: diff_drive_controller/DiffDriveController
+
+imu_sensor_broadcaster:
+  ros__parameters:
+    sensor_name: imu
+    frame_id: imu_link
+    # Row-major 3x3, diagonal only. Estimates for the BNO055; tune in Phase 6.
+    static_covariance_orientation: [1.0e-3, 0.0, 0.0, 0.0, 1.0e-3, 0.0, 0.0, 0.0, 1.0e-3]
+    static_covariance_angular_velocity: [1.0e-5, 0.0, 0.0, 0.0, 1.0e-5, 0.0, 0.0, 0.0, 1.0e-5]
+    static_covariance_linear_acceleration: [1.0e-3, 0.0, 0.0, 0.0, 1.0e-3, 0.0, 0.0, 0.0, 1.0e-3]
+
+diff_drive_controller:
+  ros__parameters:
+    left_wheel_names: [left_wheel_joint]
+    right_wheel_names: [right_wheel_joint]
+
+    odom_frame_id: odom
+    base_frame_id: base_footprint
+    # Until the Phase 6 EKF owns odom -> base_footprint; Phase 6 sets this to false.
+    enable_odom_tf: true
+    publish_rate: 50.0
+    open_loop: false
+    position_feedback: true
+    pose_covariance_diagonal: [0.001, 0.001, 1.0e6, 1.0e6, 1.0e6, 0.01]
+    twist_covariance_diagonal: [0.001, 0.001, 1.0e6, 1.0e6, 1.0e6, 0.01]
+
+    # Zero the wheels if no command arrives within this (s). Below it: DriveLink watchdog 200 ms.
+    cmd_vel_timeout: 0.5

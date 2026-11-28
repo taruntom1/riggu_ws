@@ -62,7 +62,13 @@ imu:  # BNO055 (on the DriveLink board)
   pitch:             {value: 0.0,    source: estimate}
   yaw:               {value: 0.0,    source: estimate}
   rate:              {value: 100.0,  source: estimate, note: "Hz, sim only"}
+  gyro_noise_stddev:  {value: 0.0017, source: datasheet, note: "rad/s, sim only; 0.014 deg/s/sqrt(Hz) at 50 Hz bandwidth"}
+  gyro_bias_stddev:   {value: 0.001,  source: estimate,  note: "rad/s, sim only"}
+  accel_noise_stddev: {value: 0.010,  source: datasheet, note: "m/s^2, sim only; 150 ug/sqrt(Hz) at 50 Hz bandwidth"}
+  accel_bias_stddev:  {value: 0.02,   source: estimate,  note: "m/s^2, sim only"}
 
 limits:
   max_linear_velocity:  {value: 0.5, source: old_config, note: "m/s; old nav2 MPPI vx_max / velocity smoother"}
   max_angular_velocity: {value: 2.0, source: old_config, note: "rad/s; old nav2 velocity smoother"}
+  max_linear_accel:     {value: 1.0, source: estimate,   note: "m/s^2; diff_drive_controller limit"}
+  max_angular_accel:    {value: 3.0, source: estimate,   note: "rad/s^2; diff_drive_controller limit"}

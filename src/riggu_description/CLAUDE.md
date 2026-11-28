@@ -4,7 +4,7 @@
 - **Datums, not offsets:** YAML values are things a tape measure reaches (floor, chassis edges, centreline, axle, deck). `urdf/properties.xacro` derives the frame offsets; keep raw numbers out of the other xacro files.
 - **Hardware selection:** `urdf/ros2_control.xacro` picks the hardware from `mode`; an unknown mode fails xacro.
   - `real`: DriveLink's installed `drivelink.ros2_control.xacro` macro (`$(find drivelink_bringup)`). Don't copy the plugin class name into this repo.
-  - `sim`: `gz_ros2_control/GazeboSimSystem`; params via the `controllers_file` arg.
+  - `sim`: `gz_ros2_control/GazeboSimSystem`; params via the `controllers_file` arg. Wheel collisions are spheres in `sim` only, so turn odometry matches; keep the other modes' cylinders (the geometry tests use them).
   - `mock`: `mock_components/GenericSystem` with `calculate_dynamics`.
 - **Joints and interfaces must match DriveLink and `riggu_bringup/config/controllers.yaml`:**
   - Joint names: `left_wheel_joint`, `right_wheel_joint`; both rotate about +y, so +velocity is forward.
