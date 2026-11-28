@@ -1,0 +1,68 @@
+# riggu physical model: single source of truth for every dimension, mass and
+# sensor pose. urdf/properties.xacro derives all frame offsets from it.
+#
+# Units: SI (m, kg, rad). Every leaf is {value, source[, note]}.
+#   source: estimate    guessed; replace when measured
+#           old_config  from the riggu_ws_old hardware config (DriveLink, nav2)
+#           datasheet   manufacturer spec
+#           user        described by the user, not measured
+#           measured    tape/scale measurement (add the date to note)
+#           calibrated  from a calibration run (Phase 4)
+#
+# Datums (all reachable with a tape measure, robot standing on the floor):
+#   floor       ground plane
+#   front edge  front face of the chassis
+#   rear edge   rear face of the chassis
+#   centreline  left-right midline of the robot
+#   axle        drive-wheel axis
+#   deck        top face of the chassis
+#
+# To correct a value: edit `value`, set `source`, rebuild, run `colcon test
+# --packages-select riggu_description` (it checks that the parts still fit).
+
+wheel:
+  radius:     {value: 0.06675, source: old_config, note: "DriveLink node_config.yaml wheel_radius"}
+  width:      {value: 0.030,   source: estimate}
+  separation: {value: 0.390,   source: old_config, note: "centre-to-centre track; DriveLink node_config.yaml wheel_base"}
+  mass:       {value: 0.100,   source: estimate, note: "per wheel incl. hub"}
+
+chassis:
+  length:             {value: 0.300, source: estimate, note: "front edge to rear edge"}
+  width:              {value: 0.340, source: estimate}
+  top_above_floor:    {value: 0.120, source: estimate, note: "deck height; single-deck build"}
+  bottom_above_floor: {value: 0.030, source: estimate, note: "ground clearance"}
+  axle_from_front:    {value: 0.075, source: estimate, note: "front edge to axle; axle is toward the front"}
+  mass:               {value: 2.160, source: estimate, note: "motors, battery, Pi, DriveLink, frame; total robot ~2.5 kg"}
+
+caster:
+  radius:    {value: 0.0125, source: estimate, note: "single rear ball caster"}
+  from_rear: {value: 0.040,  source: estimate, note: "rear edge to caster contact point"}
+  mass:      {value: 0.030,  source: estimate}
+
+lidar:  # RPLIDAR C1
+  x_from_axle:           {value: 0.0,    source: user, note: "centred over the axle; +x forward"}
+  y_from_centreline:     {value: 0.0,    source: user, note: "+y left"}
+  base_above_deck:       {value: 0.0,    source: estimate, note: "spacer height under the C1"}
+  scan_plane_above_base: {value: 0.026,  source: estimate, note: "C1 mounting face to optical plane"}
+  yaw:                   {value: 0.0,    source: old_config, note: "0 deg points forward (old sllidar inverted:=false); verify in Phase 4"}
+  size:                  {value: 0.0556, source: datasheet, note: "body width/depth"}
+  height:                {value: 0.0413, source: datasheet}
+  mass:                  {value: 0.110,  source: datasheet}
+  range_min:             {value: 0.05,   source: datasheet}
+  range_max:             {value: 12.0,   source: datasheet}
+  rate:                  {value: 10.0,   source: datasheet, note: "Hz"}
+  samples:               {value: 500,    source: datasheet, note: "5 kHz / 10 Hz = 0.72 deg"}
+  noise_stddev:          {value: 0.01,   source: estimate, note: "sim only"}
+
+imu:  # BNO055 (on the DriveLink board)
+  x_from_axle:       {value: -0.050, source: estimate, note: "verify in Phase 4"}
+  y_from_centreline: {value: 0.0,    source: estimate}
+  z_above_floor:     {value: 0.060,  source: estimate}
+  roll:              {value: 0.0,    source: estimate, note: "chip axes vs base_link (REP-103: x fwd, y left, z up)"}
+  pitch:             {value: 0.0,    source: estimate}
+  yaw:               {value: 0.0,    source: estimate}
+  rate:              {value: 100.0,  source: estimate, note: "Hz, sim only"}
+
+limits:
+  max_linear_velocity:  {value: 0.5, source: old_config, note: "m/s; old nav2 MPPI vx_max / velocity smoother"}
+  max_angular_velocity: {value: 2.0, source: old_config, note: "rad/s; old nav2 velocity smoother"}

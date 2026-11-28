@@ -9,8 +9,23 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <!-- mode:=mock (mock_components/GenericSystem) -->
+  <exec_depend>hardware_interface</exec_depend>
+  <!-- mode:=real. From the DriveLink apt repo, not rosdistro: rosdep calls pass skip-keys -->
+  <exec_depend>drivelink_bringup</exec_depend>
+  <!--
+    Dev-only, deliberately undeclared so they stay off the Pi: rviz2 and
+    joint_state_publisher_gui (display.launch.py), gz_ros2_control (mode:=sim,
+    declared by riggu_gazebo).
+  -->
+
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>liburdfdom-tools</test_depend>
+  <test_depend>python3-yaml</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -55,7 +55,7 @@ jobs:
             sudo apt-get update -qq
             mkdir -p src/external
             vcs import --input riggu.repos src/external
-            rosdep install --from-paths src --ignore-src --rosdistro jazzy -y
+            rosdep install --from-paths src --ignore-src --rosdistro jazzy -y --skip-keys drivelink_bringup
             colcon build --symlink-install --event-handlers console_direct+
             colcon test --event-handlers console_direct+
             colcon test-result --verbose'

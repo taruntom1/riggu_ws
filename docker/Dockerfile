@@ -40,6 +40,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-jazzy-drivelink-bringup \
  && rm -rf /var/lib/apt/lists/*
 
+# Dev-only GUI tools, kept off the Pi (riggu_description display.launch.py).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ros-jazzy-joint-state-publisher-gui \
+ && rm -rf /var/lib/apt/lists/*
+
 FROM base AS dev
 ARG DEBIAN_FRONTEND=noninteractive
 ARG USERNAME=riggu
@@ -67,6 +72,12 @@ RUN rosdep update --rosdistro jazzy \
 # Jazzy + workspace + zenoh profile (sim unless RIGGU_PROFILE says otherwise).
 if [[ -f /ws/scripts/env.sh ]]; then source /ws/scripts/env.sh "${RIGGU_PROFILE:-sim}"; else source /opt/ros/jazzy/setup.bash; fi
 [[ -f /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash ]] && source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash
+EOF
+# Non-interactive login shells (`docker_run.sh <cmd>` and CI run `bash -lc`): ~/.bashrc
+# returns early for them, so source the same profile here. Otherwise they fall back to
+# FastDDS, which is flaky with host networking and host IPC.
+RUN cat >> "$HOME/.profile" <<'EOF'
+case $- in *i*) ;; *) if [ -f /ws/scripts/env.sh ]; then . /ws/scripts/env.sh "${RIGGU_PROFILE:-sim}" >/dev/null; fi ;; esac
 EOF
 WORKDIR /ws
 CMD ["bash"]

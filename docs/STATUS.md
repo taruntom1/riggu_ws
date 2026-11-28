@@ -1,12 +1,12 @@
 # Status
 
-Updated 2026-11-26. Next phase: **1** (in review). Run a phase with `/implement-phase <n>`.
+Updated 2026-11-28. Next phase: **2** (in review). Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
 | 0 | Host tooling and repo | done | `phase/0-host-tooling` · [PR #1](https://github.com/taruntom1/riggu_ws/pull/1) |
-| 1 | Workspace, Docker, setup scripts, CI | review | `phase/1-workspace` · [PR #2](https://github.com/taruntom1/riggu_ws/pull/2) |
-| 2 | Robot description (URDF) | todo | — |
+| 1 | Workspace, Docker, setup scripts, CI | done | `phase/1-workspace` · [PR #2](https://github.com/taruntom1/riggu_ws/pull/2) |
+| 2 | Robot description (URDF) | review | `phase/2-description` · [PR #3](https://github.com/taruntom1/riggu_ws/pull/3) |
 | 3 | Simulated drive | todo | — |
 | 4 | Real base bring-up | todo | — |
 | 5 | Joystick, twist_mux, safety | todo | — |
@@ -18,8 +18,8 @@ Updated 2026-11-26. Next phase: **1** (in review). Run a phase with `/implement-
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 1:** review and merge PR #2.
-- **Phase 2:** robot measurements (list at the end of `docs/REQUIREMENTS.md`).
+- **Phase 2:** review and merge PR #3 (model confirmed in RViz).
+- **Any time:** tape-measure the `source: estimate` values in `src/riggu_description/config/robot.yaml` (chassis, caster, IMU, wheel width) and weigh the robot.
 
 ## Known environment facts
 - The dev host is WSL2 Ubuntu 26.04 (`resolute`) with ROS **Lyrical** installed, so build in the Jazzy container.
@@ -52,3 +52,8 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
 - **Phase 1, lidar:** apt `rplidar_ros` 2.1.0 has no C1 support, so Slamtec `sllidar_ros2` is pinned in `riggu.repos` → `src/external/`.
 - **Phase 1, compose:** a single `dev` service (no separate `sim` service); sim is a command in it.
 - **Phase 1, CI:** image built with the GHA layer cache, nothing published (user's choice).
+- **Phase 2, source data:** the old `riggu_description` URDF is the unmodified articubot_one template, so it is not used. Wheel radius 66.75 mm and separation 390 mm come from the old DriveLink config. Layout (axle at the front, rear ball caster, single deck, lidar over the axle) is from the user. Other sizes are estimates; total mass is an estimate of ~2.5 kg.
+- **Phase 2, params:** dimensions live in `riggu_description/config/robot.yaml` (`{value, source}`), loaded by `properties.xacro`. From Phase 3, `diff_drive_controller` takes its wheel params from it too.
+- **Phase 2, done-when:** checking the sensor axes against the real IMU and lidar moved to Phase 4 checks 3–4 (Pi unreachable; user's choice).
+- **Phase 2, deps:** `drivelink_bringup` is in `package.xml` and rosdep skips it (`--skip-keys`). `rviz2`/`joint_state_publisher_gui` are dev-only (Dockerfile, `setup_local.sh --profile dev`), not in `package.xml`.
+- **Phase 2, container shells:** `bash -lc` (docker_run.sh commands, CI) now sources `env.sh sim` through `~/.profile`. Before, it fell back to FastDDS, and RViz on WSLg got no TF.

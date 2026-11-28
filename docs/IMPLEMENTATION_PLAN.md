@@ -61,21 +61,22 @@ Tasks
 
 Done when: `scripts/docker_run.sh` opens a GPU-accelerated RViz on WSLg, `colcon build` is clean in the container, and CI is green on the PR.
 
-## Phase 2 — Robot description (URDF) ⟵ needs your measurements
+## Phase 2 — Robot description (URDF)
 
 Tasks
+- `riggu_description/config/robot.yaml`: every dimension, mass, sensor pose and limit as `{value, source, note}`, measured from tape-friendly datums. `source` (`estimate`, `old_config`, `datasheet`, `user`, `measured`, `calibrated`) shows what still needs correcting.
 - `riggu_description/urdf/`:
-  - `riggu.urdf.xacro`, plus `properties.xacro` holding every measurement in one file.
-  - Inertia macros; wheels, casters, `laser`, `imu_link`.
-  - Simple meshes or primitives.
+  - `riggu.urdf.xacro`, plus `properties.xacro`, which loads `robot.yaml` and derives every frame offset.
+  - Inertia macros; wheels, caster, `laser`, `imu_link`.
+  - Primitives.
 - `ros2_control.xacro` selects the hardware by `mode`:
   - `real`: DriveLink macro with velocity command interfaces and IMU sensor.
   - `sim`: `gz_ros2_control/GazeboSimSystem` with the same joints and IMU sensor.
   - `mock`: `mock_components/GenericSystem`, for CI and desk tests.
 - `display.launch.py` (robot_state_publisher, joint_state_publisher_gui, RViz).
-- Test: xacro expands for all three modes and `check_urdf` passes (colcon test).
+- Test: xacro expands for all three modes and `check_urdf` passes; interfaces, frames, YAML schema and geometry fit are checked (colcon test).
 
-Done when: the model in RViz matches the physical robot, and the frames and axes in RViz agree with the real IMU and lidar mounting.
+Done when: the model in RViz matches the physical robot's layout (axle at the front, rear caster, lidar over the axle). The values start from the old DriveLink config plus estimates (no tape measurements yet). Checking the IMU and lidar axes against the real sensors moved to Phase 4 hardware checks 3–4.
 
 ## Phase 3 — Simulated drive
 
@@ -84,7 +85,7 @@ Tasks
 - Sensors:
   - Lidar: `gpu_lidar` matched to the C1 (10 Hz, 0.72°, 0.05–12 m, Gaussian noise).
   - IMU: through gz_ros2_control, with noise.
-- `riggu_bringup/config/controllers.yaml` (shared): `joint_state_broadcaster`, `imu_sensor_broadcaster`, `diff_drive_controller` with velocity interface, limits, `cmd_vel_timeout`.
+- `riggu_bringup/config/controllers.yaml` (shared): `joint_state_broadcaster`, `imu_sensor_broadcaster`, `diff_drive_controller` with velocity interface, limits, `cmd_vel_timeout`. Wheel radius and separation come from `riggu_description/config/robot.yaml` (set by the launch file), not a second copy.
 - `riggu_bringup/launch/bringup.launch.py mode:=sim|real|mock`.
 
 Done when: keyboard teleop drives the robot in Gazebo, `/scan`, `/imu`, and `/odom` are sane in RViz, and CI runs a `mock`-mode launch test.
@@ -99,7 +100,8 @@ Tasks
   2. Velocity-mode PID response.
   3. IMU axes against the URDF.
   4. Lidar orientation against the URDF.
-- Calibrate wheel radius (2 m straight run) and separation (10 in-place turns); write the values back to `properties.xacro`.
+- Calibrate wheel radius (2 m straight run) and separation (10 in-place turns); write the values back to `riggu_description/config/robot.yaml` (`source: calibrated`).
+- Correct the sensor poses in `robot.yaml` from checks 3–4 (`source: measured`).
 - Laptop: `source scripts/env.sh remote` → RViz over zenoh.
 
 Done when: keyboard teleop from the laptop drives the real robot, odometry error is under about 2% on the straight-line and rotation tests, and RViz on the laptop shows the scan and TF live.

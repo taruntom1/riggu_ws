@@ -22,7 +22,7 @@ ROS 2 **Jazzy** workspace for *riggu*, a differential-drive robot.
 - `riggu.local` reaches the Pi over **Tailscale**: a dedicated riggu tailnet, shared to users, mapped in `~/.ssh/config`. The Pi can't connect back to user machines, so design every robot↔laptop link with the laptop connecting to the Pi.
 - Without internet, use `ssh riggu-local`, a Windows hotspot port-forward (`127.0.0.1:2222`; zenoh on `127.0.0.1:17447`). Re-run `scripts/windows/riggu_portproxy.ps1` as admin if it stops working.
 - Never commit tailnet names, account identities, or auth keys. The repo is public.
-- `source scripts/env.sh sim|remote|robot` selects the rmw_zenoh profile. Interactive container shells source `sim` automatically.
+- `source scripts/env.sh sim|remote|robot` selects the rmw_zenoh profile. Container shells source `sim` automatically, both interactive and `bash -lc` (`docker_run.sh <cmd>`, CI).
 - Git worktrees work in the container: `docker_run.sh` also mounts the main repo's git dir.
 
 ## Rules

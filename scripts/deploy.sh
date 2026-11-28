@@ -69,7 +69,8 @@ vcs import --input riggu.repos src/external
 
 log "rosdep install"
 mapfile -t pkgs < <(colcon list --base-paths src --paths-only --packages-skip riggu_gazebo)
-rosdep install --from-paths "${pkgs[@]}" --ignore-src --rosdistro jazzy -y
+# drivelink_bringup comes from the DriveLink apt repo (setup_local.sh), not rosdistro.
+rosdep install --from-paths "${pkgs[@]}" --ignore-src --rosdistro jazzy -y --skip-keys drivelink_bringup
 
 log "colcon build"
 colcon build --symlink-install --packages-skip riggu_gazebo

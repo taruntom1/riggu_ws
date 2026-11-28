@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<!--
+  Loads config/robot.yaml (arg robot_config) and derives every frame offset.
+  Raw values: edit robot.yaml, never this file. Derived values: base_link frame
+  (x forward, y left, z up; origin on the axle midpoint, wheel_radius above floor).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:property name="cfg" value="${xacro.load_yaml(robot_config)}"/>
+
+  <!-- Raw values -->
+  <xacro:property name="wheel_radius" value="${cfg.wheel.radius.value}"/>
+  <xacro:property name="wheel_width" value="${cfg.wheel.width.value}"/>
+  <xacro:property name="wheel_separation" value="${cfg.wheel.separation.value}"/>
+  <xacro:property name="wheel_mass" value="${cfg.wheel.mass.value}"/>
+
+  <xacro:property name="chassis_length" value="${cfg.chassis.length.value}"/>
+  <xacro:property name="chassis_width" value="${cfg.chassis.width.value}"/>
+  <xacro:property name="chassis_top" value="${cfg.chassis.top_above_floor.value}"/>
+  <xacro:property name="chassis_bottom" value="${cfg.chassis.bottom_above_floor.value}"/>
+  <xacro:property name="axle_from_front" value="${cfg.chassis.axle_from_front.value}"/>
+  <xacro:property name="chassis_mass" value="${cfg.chassis.mass.value}"/>
+
+  <xacro:property name="caster_radius" value="${cfg.caster.radius.value}"/>
+  <xacro:property name="caster_from_rear" value="${cfg.caster.from_rear.value}"/>
+  <xacro:property name="caster_mass" value="${cfg.caster.mass.value}"/>
+
+  <xacro:property name="lidar" value="${cfg.lidar}"/>
+  <xacro:property name="imu" value="${cfg.imu}"/>
+
+  <!-- Derived (base_link frame) -->
+  <xacro:property name="axle_height" value="${wheel_radius}"/>
+  <xacro:property name="chassis_height" value="${chassis_top - chassis_bottom}"/>
+  <xacro:property name="chassis_x" value="${axle_from_front - chassis_length / 2}"/>
+  <xacro:property name="chassis_z" value="${(chassis_top + chassis_bottom) / 2 - axle_height}"/>
+  <xacro:property name="wheel_y" value="${wheel_separation / 2}"/>
+  <xacro:property name="caster_x" value="${axle_from_front - chassis_length + caster_from_rear}"/>
+  <xacro:property name="caster_z" value="${caster_radius - axle_height}"/>
+  <!-- Visual-only post from the caster ball up to the chassis bottom -->
+  <xacro:property name="caster_post_length" value="${chassis_bottom - caster_radius}"/>
+
+  <xacro:property name="lidar_base_z" value="${chassis_top + lidar.base_above_deck.value - axle_height}"/>
+  <xacro:property name="laser_z" value="${lidar_base_z + lidar.scan_plane_above_base.value}"/>
+  <!-- C1 body centre relative to the laser (optical) frame -->
+  <xacro:property name="lidar_body_z" value="${lidar.height.value / 2 - lidar.scan_plane_above_base.value}"/>
+
+  <xacro:property name="imu_z" value="${imu.z_above_floor.value - axle_height}"/>
+</robot>
