@@ -18,7 +18,7 @@ Updated 2026-11-28. Next phase: **2** (in review). Run a phase with `/implement-
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 2:** look at the model (`ros2 launch riggu_description display.launch.py`), then review and merge PR #3.
+- **Phase 2:** review and merge PR #3 (model confirmed in RViz).
 - **Any time:** tape-measure the `source: estimate` values in `src/riggu_description/config/robot.yaml` (chassis, caster, IMU, wheel width) and weigh the robot.
 
 ## Known environment facts
