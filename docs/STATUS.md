@@ -1,6 +1,6 @@
 # Status
 
-Updated 2026-11-28. Next phase: **4** (in review). Run a phase with `/implement-phase <n>`.
+Updated 2026-11-28. Next phase: **5** (in review). Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
@@ -8,8 +8,8 @@ Updated 2026-11-28. Next phase: **4** (in review). Run a phase with `/implement-
 | 1 | Workspace, Docker, setup scripts, CI | done | `phase/1-workspace` · [PR #2](https://github.com/taruntom1/riggu_ws/pull/2) |
 | 2 | Robot description (URDF) | done | `phase/2-description` · [PR #3](https://github.com/taruntom1/riggu_ws/pull/3) |
 | 3 | Simulated drive | done | `phase/3-sim-drive` · [PR #4](https://github.com/taruntom1/riggu_ws/pull/4) |
-| 4 | Real base bring-up | review | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) |
-| 5 | Joystick, twist_mux, safety | todo | — |
+| 4 | Real base bring-up | done | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) |
+| 5 | Joystick, twist_mux, safety | review | `phase/5-teleop-safety` · [PR #6](https://github.com/taruntom1/riggu_ws/pull/6) |
 | 6 | EKF fusion | todo | — |
 | 7 | Mapping and localisation | todo | — |
 | 8 | Navigation | todo | — |
@@ -18,7 +18,7 @@ Updated 2026-11-28. Next phase: **4** (in review). Run a phase with `/implement-
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 4:** review and merge PR #5.
+- **Phase 5:** pad-off check (wheels up: hold LB+stick, unplug the pad, wheels stop within ~0.5 s), a short floor drive, then review and merge PR #6. After the merge: `git checkout main && scripts/deploy.sh` on the Pi (needs internet there).
 - **IMU:** fit the BNO055, add an `imu.bno055` instance labelled `imu` on the DriveLink board, then run Phase 4 check 3 (IMU axes) before Phase 6.
 - **USB EMI:** both the C1 and the DriveLink USB links dropped once under motor load; secure and shield the cables (ferrites, routing away from motor wiring).
 - **Any time:** tape-measure the `source: estimate` values in `src/riggu_description/config/robot.yaml` (chassis, caster, IMU, wheel width) and weigh the robot.
@@ -42,6 +42,7 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
 - Dev image `riggu_ws:jazzy-dev` (7.1 GB). On WSL, GL is Mesa D3D12 on the RTX 4050 (OpenGL 4.6).
 - DriveLink board (2026-11-28): controllers `pid_left`/`pid_right` (velocity mode, cascade PID), encoders 7385 counts/wheel rev, no IMU instance yet. Agent on `0.0.0.0:47620`.
 - The laptop clock drifted 92 s behind the Pi once; Windows "Sync now" fixed it. Laptop teleop needs synced clocks (`cmd_vel_timeout` uses the stamp).
+- Pad: USB "ShanWan" PlayStation-shape pad, enumerates as Xbox 360 (`045e:028e`, xpad) → `/dev/input/js0`. Mapping in `riggu_teleop/config/joy_generic.yaml`.
 - DriveLink macro: `drivelink_diff_drive(name agent device token_file token left_joint left_label right_joint right_label imu_label)`.
 
 ## Decisions / deviations
@@ -71,3 +72,7 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
 - **Phase 4, calibration:** wheel radius 0.06374 m, separation 0.3853 m (`calibrated`); verification 1 % straight, 0.2 % turns. Lidar yaw 0 verified (`measured`).
 - **Phase 4, recovery:** `drivelink_diagnostics` `recovery_controllers` excludes `diff_drive_controller`, so `recover` never arms (same rule as launch).
 - **Phase 4, IMU check 3:** deferred until the BNO055 is fitted (before Phase 6).
+- **Phase 5, arming:** the pad arms (deadman LB + Start held 1 s → `diff_drive_controller` active) and disarms (Back) through `riggu_teleop/arm_switch`; boot and launch stay disarmed (user's choice).
+- **Phase 5, collision monitor:** baseline is one `approach` polygon (footprint from `robot.yaml` + 3 cm, 1 s horizon); a stale `/scan` stops. Joystick bypass is the launch arg `collision_check_joy:=false` (monitor moves onto `/cmd_vel_nav`). Mock disables the scan timeout.
+- **Phase 5, `/estop`:** a 10 Hz heartbeat with a 0.5 s twist_mux lock timeout, so a dead `stop_latch` locks the output. `~/set` (SetBool) latches it from the laptop.
+- **Phase 5, pad recovery:** the arm combo calls `/drivelink_diagnostics/recover` first when the hardware isn't active (user's choice), so a link loss is recoverable without a laptop. Seen once: link loss 52 s after a boot ("no fresh sample", no USB disconnect), when Wi-Fi and chrony came up; cause open.

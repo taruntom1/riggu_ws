@@ -1,0 +1,38 @@
+# nav2 collision_monitor between twist_mux and diff_drive_controller (Phase 5 baseline;
+# Phase 8 tunes the polygons). Topics and the footprint are set by bringup.launch.py:
+#   cmd_vel_in_topic / cmd_vel_out_topic  /cmd_vel_mux -> /cmd_vel_safe
+#                                         (collision_check_joy:=false: /cmd_vel_nav -> /cmd_vel_nav_checked)
+#   FootprintApproach.points              chassis + wheels from robot.yaml, plus footprint_margin
+# A source older than source_timeout stops the robot (lidar lost = stop); mode:=mock has no
+# lidar, so the launch sets scan.source_timeout 0 there.
+
+collision_monitor:
+  ros__parameters:
+    base_frame_id: base_footprint
+    odom_frame_id: odom
+    state_topic: collision_monitor_state
+    transform_tolerance: 0.2
+    source_timeout: 1.0        # s; the C1 runs at 10 Hz
+    base_shift_correction: true
+    stop_pub_timeout: 1.0
+    enable_stamped_cmd_vel: true
+    polygons: [FootprintApproach]
+    FootprintApproach:
+      type: polygon
+      action_type: approach    # slows/stops only motion that would hit; moving away is free
+      time_before_collision: 1.0  # s
+      simulation_time_step: 0.05  # s
+      min_points: 4
+      visualize: true
+      polygon_pub_topic: collision_monitor_footprint
+      enabled: true
+    observation_sources: [scan]
+    scan:
+      type: scan
+      topic: /scan
+      enabled: true
+
+# Not a node: read by bringup.launch.py to build FootprintApproach.points.
+riggu_footprint:
+  ros__parameters:
+    margin: 0.03  # m around chassis + wheels

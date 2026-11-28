@@ -25,10 +25,17 @@ that is always an explicit `ros2 control switch_controllers --activate`.
 
 imu:=false drops the `imu` sensor from the expanded ros2_control block and the
 imu_sensor_broadcaster (robot without an IMU; DriveLink refuses a missing instance).
+
+cmd_vel chain (riggu_teleop/teleop.launch.py + nav2 collision_monitor):
+  /cmd_vel_joy, /cmd_vel_nav, /estop -> twist_mux -> /cmd_vel_mux -> collision_monitor
+    -> /cmd_vel_safe -> diff_drive_controller
+collision_check_joy:=false moves collision_monitor onto the nav input only:
+  /cmd_vel_nav -> collision_monitor -> /cmd_vel_nav_checked -> twist_mux -> /cmd_vel_safe
+joy/arm:=auto start the pad nodes and the pad arm switch on mode:=real only.
 """
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
@@ -89,6 +96,60 @@ def launch_setup(context, controllers, use_sim_time):
                                                   'recovery_controllers': recovery}],
                           output='screen'))
     return nodes
+
+
+def footprint(robot, margin):
+    """Footprint polygon (base_footprint, axle at x=0) around chassis and wheels."""
+    def v(group, key):
+        return robot[group][key]['value']
+    front = max(v('chassis', 'axle_from_front'), v('wheel', 'radius')) + margin
+    rear = v('chassis', 'axle_from_front') - v('chassis', 'length') - margin
+    half = max(v('chassis', 'width') / 2.0,
+               v('wheel', 'separation') / 2.0 + v('wheel', 'width') / 2.0) + margin
+    return [[front, half], [front, -half], [rear, -half], [rear, half]]
+
+
+def cmd_vel_chain(context, use_sim_time):
+    """twist_mux, stop latch, pad nodes (riggu_teleop) and collision_monitor."""
+    def arg(name):
+        return LaunchConfiguration(name).perform(context)
+    mode = arg('mode')
+    auto = {'auto': 'true' if mode == 'real' else 'false'}
+    joy, arm = auto.get(arg('joy'), arg('joy')), auto.get(arg('arm'), arg('arm'))
+    check_joy = arg('collision_check_joy') == 'true'
+
+    config = arg('collision_monitor_config')
+    with open(config, encoding='utf-8') as f:
+        margin = yaml.safe_load(f)['riggu_footprint']['ros__parameters']['margin']
+    with open(arg('robot_config'), encoding='utf-8') as f:
+        robot = yaml.safe_load(f)
+    points = ', '.join(f'[{x:.4f}, {y:.4f}]' for x, y in footprint(robot, margin))
+    monitor = {
+        'cmd_vel_in_topic': '/cmd_vel_mux' if check_joy else '/cmd_vel_nav',
+        'cmd_vel_out_topic': '/cmd_vel_safe' if check_joy else '/cmd_vel_nav_checked',
+        'FootprintApproach.points': f'[{points}]',
+        'use_sim_time': use_sim_time,
+    }
+    if mode == 'mock':  # no lidar: don't treat the missing /scan as a stop
+        monitor['scan.source_timeout'] = 0.0
+
+    teleop = IncludeLaunchDescription(
+        PathJoinSubstitution([FindPackageShare('riggu_teleop'), 'launch', 'teleop.launch.py']),
+        launch_arguments={
+            'use_sim_time': use_sim_time, 'joy': joy, 'arm': arm,
+            'cmd_vel_out': '/cmd_vel_mux' if check_joy else '/cmd_vel_safe',
+            'nav_in': '/cmd_vel_nav' if check_joy else '/cmd_vel_nav_checked',
+        }.items())
+    return [
+        teleop,
+        Node(package='nav2_collision_monitor', executable='collision_monitor',
+             name='collision_monitor', parameters=[config, monitor], output='screen'),
+        Node(package='nav2_lifecycle_manager', executable='lifecycle_manager',
+             name='lifecycle_manager_collision_monitor',
+             parameters=[{'node_names': ['collision_monitor'], 'autostart': True,
+                          'use_sim_time': use_sim_time}],
+             output='screen'),
+    ]
 
 
 def drive_spawner(context, controllers, use_sim_time):
@@ -163,8 +224,20 @@ def generate_launch_description():
             default_value=PathJoinSubstitution(
                 [FindPackageShare('riggu_bringup'), 'config', 'lidar.yaml']),
             description='real: sllidar_node params'),
+        DeclareLaunchArgument('joy', default_value='auto', choices=['auto', 'true', 'false'],
+                              description='joy_node + teleop_twist_joy (auto: real only)'),
+        DeclareLaunchArgument('arm', default_value='auto', choices=['auto', 'true', 'false'],
+                              description='pad arm/disarm switch (auto: real only)'),
+        DeclareLaunchArgument('collision_check_joy', default_value='true',
+                              choices=['true', 'false'],
+                              description='false: joystick bypasses the collision monitor'),
+        DeclareLaunchArgument(
+            'collision_monitor_config',
+            default_value=PathJoinSubstitution(
+                [FindPackageShare('riggu_bringup'), 'config', 'collision_monitor.yaml'])),
 
         OpaqueFunction(function=launch_setup, args=[controllers, use_sim_time]),
+        OpaqueFunction(function=cmd_vel_chain, args=[use_sim_time]),
 
         # real and mock; in sim the controller manager lives in Gazebo
         Node(package='controller_manager', executable='ros2_control_node',
