@@ -131,9 +131,9 @@ Tasks
 - BNO055 calibration in the DriveLink app (all four levels at 3, saved), done with the robot in its final configuration.
 - Set IMU covariances in the `imu_sensor_broadcaster` params.
 - `robot_localization` `ekf_node` (`two_d_mode`, 30 Hz):
-  - `twist0`: vx, vy (= 0, non-holonomic) and vyaw from `/wheel/twist` (`riggu_bringup/wheel_twist`, from `/joint_states`). Not `/odom`: `diff_drive_controller` publishes it only while armed.
-  - `imu0`: vyaw plus absolute yaw.
-  - The `use_imu_orientation` launch arg swaps in a gyro-only config.
+  - `twist0`: vx, vy (= 0, non-holonomic) and vyaw from `/wheel/twist` (`riggu_bringup/wheel_twist`, encoder position differences from `/joint_states`). Not `/odom`: `diff_drive_controller` publishes it only while armed.
+  - `imu0`: vyaw from `/imu/corrected` (`riggu_bringup/imu_scale`: the BNO055 gyro reads 3.2 % fast; `robot.yaml` `imu.gyro_z_scale`).
+  - `use_imu_orientation` (default `false`, chosen from the floor tests) adds the BNO055 absolute yaw.
 - `diff_drive_controller` `enable_odom_tf: false` (true since Phase 3, while no EKF exists).
 - Sim IMU bias and noise (added in Phase 3, values in `robot.yaml`) are checked against the tuned EKF.
 - Magnetic interference check: compare IMU yaw with odometry yaw while spinning the motors in place. Record the result and choose the default.
@@ -176,6 +176,7 @@ Tasks
 - CI: headless Gazebo smoke test (spawn, drive, odometry moves).
 - README quickstarts: Docker sim, native dev, Pi setup, daily robot use.
 - Docs: tuning notes, troubleshooting (zenoh connectivity, WSL mDNS, Bluetooth re-pairing).
+- **DriveLink gyro scale:** once [drivelink_v2#136](https://github.com/taruntom1/drivelink_v2/issues/136) lands, calibrate the scale on the board, drop `riggu_bringup/imu_scale` and `imu.gyro_z_scale`, and point the EKF's `imu0` back at `/imu`. Re-run the Phase 6 floor replay or square/spin to confirm.
 - Tag `v1.0`.
 
 ---
@@ -186,7 +187,8 @@ Tasks
 |---|---|
 | `ros-jazzy-drivelink-*` arm64/amd64 availability, and the macro and plugin names | Phase 1: 0.2.1 on noble amd64 and arm64; macro `drivelink_diff_drive(name agent device token_file token left_joint left_label right_joint right_label imu_label)` in `drivelink_bringup/urdf/drivelink.ros2_control.xacro` |
 | RPLIDAR C1 support in apt `rplidar_ros` | Phase 1: apt 2.1.0 has no C1 support; Slamtec `sllidar_ros2` pinned in `riggu.repos` |
-| BNO055 yaw disturbed by motor magnets | Phase 6 interference test; one-flag fallback to gyro-only |
+| BNO055 yaw disturbed by motor magnets | Phase 6: wheels-up test stayed within 1.5°, but on the floor the heading drifted 3–6° on straights, so the default is gyro-only (`use_imu_orientation:=false`) |
+| BNO055 gyro scale 3.2 % fast | `riggu_bringup/imu_scale` stop-gap; firmware fix in drivelink_v2#136 (Phase 9) |
 | Robot reachability and isolation | Tailscale share from a dedicated tailnet (Pi can't reach sharees). Offline fallback: hotspot + Windows `netsh portproxy`; re-run it if the Pi's hotspot IP changes |
 | Clock skew between Pi and laptop breaking RViz TF | chrony on the Pi; the laptop only visualises |
 | USB drops under motor load (2026-11-28: C1 port "disabled by hub (EMI?)", DriveLink CH343 re-enumerated) | Short shielded cables / ferrites, motor power wiring away from USB; sllidar respawns and `/dev/rplidar` follows; DriveLink link loss → hardware `unconfigured`, `recover` restores it disarmed |
