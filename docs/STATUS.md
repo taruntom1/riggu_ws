@@ -1,6 +1,6 @@
 # Status
 
-Updated 2026-11-28. Next phase: **6** (in review). Run a phase with `/implement-phase <n>`.
+Updated 2026-11-28. Next phase: **7** (in review). Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
@@ -10,15 +10,16 @@ Updated 2026-11-28. Next phase: **6** (in review). Run a phase with `/implement-
 | 3 | Simulated drive | done | `phase/3-sim-drive` · [PR #4](https://github.com/taruntom1/riggu_ws/pull/4) |
 | 4 | Real base bring-up | done | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) |
 | 5 | Joystick, twist_mux, safety | done | `phase/5-teleop-safety` · [PR #6](https://github.com/taruntom1/riggu_ws/pull/6) |
-| 6 | EKF fusion | review | `phase/6-ekf` · [PR #8](https://github.com/taruntom1/riggu_ws/pull/8) |
-| 7 | Mapping and localisation | todo | — |
+| 6 | EKF fusion | done | `phase/6-ekf` · [PR #8](https://github.com/taruntom1/riggu_ws/pull/8) |
+| 7 | Mapping and localisation | review | `phase/7-mapping` · [PR #9](https://github.com/taruntom1/riggu_ws/pull/9) |
 | 8 | Navigation | todo | — |
 | 9 | Hardening and docs | todo | — |
 
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 6:** review and merge the PR. The Pi runs `phase/6-ekf`; after the merge: `git checkout main && scripts/deploy.sh` on the Pi. `/etc/default/riggu-base` (`imu:=true`) is now redundant and can be removed.
+- **Phase 7:** review and merge the PR. The Pi runs `phase/7-mapping`; after the merge: `git checkout main && scripts/deploy.sh` on the Pi. `~/riggu_maps/room1` is the real map.
+- **Pi:** `/etc/default/riggu-base` (`imu:=true`) is redundant since Phase 6 and can be removed.
 - **Phase 6, optional:** one fresh square + spin with `odom_check` to confirm the gyro scale out of sample (the replay's spin is in-sample).
 - **USB EMI:** both the C1 and the DriveLink USB links dropped once under motor load; secure and shield the cables (ferrites, routing away from motor wiring).
 - **Any time:** tape-measure the `source: estimate` values in `src/riggu_description/config/robot.yaml` (chassis, caster, IMU, wheel width) and weigh the robot.
@@ -79,3 +80,6 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
 - **Phase 6, IMU mount:** the chip is yawed 180° (`imu.yaw` π, measured); about 5° tilt at rest is ignored in 2D. `wheel_twist` differences encoder positions: DriveLink's velocity state integrates about 1 % off.
 - **Phase 6, EKF inputs:** the wheel input is a new `wheel_twist` node (`/joint_states` → `/wheel/twist`), not `/odom`, which stops while disarmed and made the EKF diverge on the robot (user's choice). It also fuses vy (= 0), as robot_localization recommends for a diff drive; IMU yaw is `imu0_relative` (odom starts at yaw 0). The EKF runs in every mode, and `imu:=false` drops `imu0`. `riggu-base` now starts with the IMU on.
 - **Phase 5, pad recovery:** the arm combo calls `/drivelink_diagnostics/recover` first when the hardware isn't active (user's choice), so a link loss is recoverable without a laptop. Seen once: link loss 52 s after a boot ("no fresh sample", no USB disconnect), when Wi-Fi and chrony came up; cause open.
+- **Phase 7, launches:** slam_toolbox and map_server + AMCL under nav2 lifecycle managers (bond); laser range from `robot.yaml`. `save_map.sh` also serializes the pose graph. AMCL starts without a pose (RViz 2D Pose Estimate).
+- **Phase 7, checks:** sim house map: every occupied cell within 10.7 cm of the world (median 3.9 cm). Sim AMCL from 0.45 m / 15° off → 6 cm / 1.6° after a 2 m drive. Real `room1` (~7.5×6 m): SLAM back on the start mark at 3.4 cm / 1.4° (EKF 9.2 cm); AMCL from 0.37 m / 13° off → 0.5 cm / 0.1° on the mark after a ~5 m loop. AMCL's reported σ stays ~0.2 m (default alphas); tune in Phase 8 if needed.
+- **Phase 7, findings:** turning in place in a 0.9 m doorway is blocked by the collision monitor (footprint corners sweep ~0.35 m); a missed lifecycle bond under host CPU starvation shut the collision monitor down once in sim (fail-safe). Both in the plan's risks for Phase 8.

@@ -1,6 +1,6 @@
 # scripts/
 
-Host-side tooling. `save_map.sh` is planned for Phase 7.
+Host-side tooling.
 
 | Script | Use |
 |---|---|
@@ -9,7 +9,7 @@ Host-side tooling. `save_map.sh` is planned for Phase 7.
 | `env.sh <sim\|remote\|robot> [--no-router]` | **Source it.** Sources Jazzy and the workspace, sets `RMW_IMPLEMENTATION=rmw_zenoh_cpp` and the profile's `ZENOH_CONFIG_OVERRIDE` (see `config/README.md`). `sim` starts a local `rmw_zenohd` if none is listening |
 | `docker_run.sh [--build] [--display M] [--gpu M] [--write-override] [cmd…]` | Runs the dev/sim container with auto-detected display and GPU (see `docker/README.md`) |
 | `deploy.sh [--remote] [--ws P] [--no-pull] [--no-restart]` | On the Pi (or `--remote` over SSH, workspace `~/riggu_ws`): refuse a dirty tree, `git pull --ff-only`, rosdep, `colcon build` against Jazzy only (clears inherited prefix paths; skips `riggu_gazebo`), restart `riggu-base` if installed |
-| `save_map.sh <name>` | Saves the slam_toolbox map (pgm/yaml plus serialized) to `~/riggu_maps` |
+| `save_map.sh [--dir D] [--force] <name>` | Run where slam_toolbox runs (the Pi). `map_saver_cli` → `<name>.yaml/.pgm` (for AMCL) and `/slam_toolbox/serialize_map` → `<name>.posegraph/.data`, in `${RIGGU_MAP_DIR:-~/riggu_maps}`. Refuses to overwrite without `--force` |
 | `setup_tailscale.sh [--install-only] [--hostname N]` | Pi (Ubuntu 24.04): installs Tailscale from its apt repo and joins as `tag:robot` with routes, DNS and Tailscale SSH off. Interactive URL login as the riggu tailnet admin |
 | `windows/riggu_portproxy.ps1 [-Remove]` | Windows, run as admin. Resolves `riggu.local` and adds portproxy rules `127.0.0.1:2222 → Pi:22` and `127.0.0.1:17447 → Pi:7447` and `127.0.0.1:47620 → Pi:47620` (DriveLink app), because WSL mirrored mode can't reach the hotspot subnet. Offline fallback (SSH alias `riggu-local`). Re-run if the Pi's IP changes |
 
