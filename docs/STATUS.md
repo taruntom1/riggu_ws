@@ -56,3 +56,4 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
 - **Phase 2, params:** dimensions live in `riggu_description/config/robot.yaml` (`{value, source}`), loaded by `properties.xacro`. From Phase 3, `diff_drive_controller` takes its wheel params from it too.
 - **Phase 2, done-when:** checking the sensor axes against the real IMU and lidar moved to Phase 4 checks 3–4 (Pi unreachable; user's choice).
 - **Phase 2, deps:** `drivelink_bringup` is in `package.xml` and rosdep skips it (`--skip-keys`). `rviz2`/`joint_state_publisher_gui` are dev-only (Dockerfile, `setup_local.sh --profile dev`), not in `package.xml`.
+- **Phase 2, container shells:** `bash -lc` (docker_run.sh commands, CI) now sources `env.sh sim` through `~/.profile`. Before, it fell back to FastDDS, and RViz on WSLg got no TF.

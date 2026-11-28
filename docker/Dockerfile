@@ -73,5 +73,11 @@ RUN rosdep update --rosdistro jazzy \
 if [[ -f /ws/scripts/env.sh ]]; then source /ws/scripts/env.sh "${RIGGU_PROFILE:-sim}"; else source /opt/ros/jazzy/setup.bash; fi
 [[ -f /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash ]] && source /usr/share/colcon_argcomplete/hook/colcon-argcomplete.bash
 EOF
+# Non-interactive login shells (`docker_run.sh <cmd>` and CI run `bash -lc`): ~/.bashrc
+# returns early for them, so source the same profile here. Otherwise they fall back to
+# FastDDS, which is flaky with host networking and host IPC.
+RUN cat >> "$HOME/.profile" <<'EOF'
+case $- in *i*) ;; *) if [ -f /ws/scripts/env.sh ]; then . /ws/scripts/env.sh "${RIGGU_PROFILE:-sim}" >/dev/null; fi ;; esac
+EOF
 WORKDIR /ws
 CMD ["bash"]
