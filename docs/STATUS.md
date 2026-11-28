@@ -1,6 +1,6 @@
 # Status
 
-Updated 2026-11-28. Next phase: **4** (in review). Run a phase with `/implement-phase <n>`.
+Updated 2026-11-28. Next phase: **5** (in progress). Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
@@ -8,8 +8,8 @@ Updated 2026-11-28. Next phase: **4** (in review). Run a phase with `/implement-
 | 1 | Workspace, Docker, setup scripts, CI | done | `phase/1-workspace` · [PR #2](https://github.com/taruntom1/riggu_ws/pull/2) |
 | 2 | Robot description (URDF) | done | `phase/2-description` · [PR #3](https://github.com/taruntom1/riggu_ws/pull/3) |
 | 3 | Simulated drive | done | `phase/3-sim-drive` · [PR #4](https://github.com/taruntom1/riggu_ws/pull/4) |
-| 4 | Real base bring-up | review | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) |
-| 5 | Joystick, twist_mux, safety | todo | — |
+| 4 | Real base bring-up | done | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) |
+| 5 | Joystick, twist_mux, safety | in progress | `phase/5-teleop-safety` |
 | 6 | EKF fusion | todo | — |
 | 7 | Mapping and localisation | todo | — |
 | 8 | Navigation | todo | — |
@@ -18,7 +18,6 @@ Updated 2026-11-28. Next phase: **4** (in review). Run a phase with `/implement-
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 4:** review and merge PR #5.
 - **IMU:** fit the BNO055, add an `imu.bno055` instance labelled `imu` on the DriveLink board, then run Phase 4 check 3 (IMU axes) before Phase 6.
 - **USB EMI:** both the C1 and the DriveLink USB links dropped once under motor load; secure and shield the cables (ferrites, routing away from motor wiring).
 - **Any time:** tape-measure the `source: estimate` values in `src/riggu_description/config/robot.yaml` (chassis, caster, IMU, wheel width) and weigh the robot.

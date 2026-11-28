@@ -1,0 +1,46 @@
+# Gamepad mapping: every button and axis index lives here (none in code).
+# Find indices with `ros2 topic echo /joy` (see README "Mapping a new pad").
+# Defaults: PlayStation-style pad, Linux evdev order
+#   buttons  0 cross  1 circle  2 triangle  3 square  4 L1  5 R1  6 L2  7 R2
+#            8 share/select  9 options/start  10 PS  11 L3  12 R3
+#   axes     0 left X (+left)  1 left Y (+up)  2 L2  3 right X  4 right Y  5 R2  6/7 d-pad
+
+joy_node:
+  ros__parameters:
+    device_id: 0
+    deadzone: 0.05
+    autorepeat_rate: 20.0  # Hz; /joy keeps flowing while a button is held
+    coalesce_interval_ms: 1
+
+teleop_twist_joy_node:
+  ros__parameters:
+    publish_stamped_twist: true
+    frame: base_footprint
+    require_enable_button: true
+    enable_button: 4           # deadman: L1
+    enable_turbo_button: 5     # turbo deadman: R1
+    axis_linear:
+      x: 1                     # left stick up/down
+    axis_angular:
+      yaw: 0                   # left stick left/right
+    scale_linear:
+      x: 0.2                   # m/s
+    scale_linear_turbo:
+      x: 0.5                   # = robot.yaml limits.max_linear_velocity
+    scale_angular:
+      yaw: 1.0                 # rad/s
+    scale_angular_turbo:
+      yaw: 2.0                 # = robot.yaml limits.max_angular_velocity
+    inverted_reverse: false
+
+stop_latch:
+  ros__parameters:
+    button: 1                  # circle: toggles /estop
+    rate: 10.0                 # Hz heartbeat; twist_mux locks if it stops
+
+arm_switch:
+  ros__parameters:
+    arm_buttons: [4, 9]        # hold L1 + options ...
+    arm_hold: 1.0              # ... for this long (s) to arm
+    disarm_button: 8           # share: disarm at once
+    controller: diff_drive_controller

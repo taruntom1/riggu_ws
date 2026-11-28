@@ -171,6 +171,8 @@ if [[ $PROFILE == robot ]]; then
   if has_systemd; then
     sudo systemctl daemon-reload
     sudo systemctl enable --now rmw-zenohd.service drivelink-agent.service chrony avahi-daemon bluetooth
+    # enabled, not started: it needs the built workspace (scripts/deploy.sh builds and restarts it)
+    sudo systemctl enable riggu-base.service
   else
     echo "systemd not running; units installed but not enabled"
   fi

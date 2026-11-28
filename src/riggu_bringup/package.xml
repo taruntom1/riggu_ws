@@ -19,6 +19,9 @@
   <exec_depend>joint_state_broadcaster</exec_depend>
   <exec_depend>imu_sensor_broadcaster</exec_depend>
   <exec_depend>diff_drive_controller</exec_depend>
+  <exec_depend>riggu_teleop</exec_depend>
+  <exec_depend>nav2_collision_monitor</exec_depend>
+  <exec_depend>nav2_lifecycle_manager</exec_depend>
   <!-- mode:=real. sllidar_ros2 is a source dep (riggu.repos); drivelink_bringup is skipped by rosdep -->
   <exec_depend>sllidar_ros2</exec_depend>
   <exec_depend>drivelink_bringup</exec_depend>

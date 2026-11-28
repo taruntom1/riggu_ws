@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""bringup.launch.py: real loads the drive inactive; imu:=false drops the IMU sensor."""
+"""bringup.launch.py: drive inactive on real, imu:=false, cmd_vel chain wiring, footprint."""
 
 import importlib.util
 from pathlib import Path
@@ -105,3 +105,53 @@ def test_recover_never_arms(imu, expected):
     recovery = [yaml.safe_load(''.join(s.perform(context) for s in item))
                 for item in params['recovery_controllers']]
     assert recovery == expected
+
+
+def test_footprint_encloses_chassis_and_wheels():
+    robot = yaml.safe_load(ROBOT_YAML.read_text())
+    poly = bringup.footprint(robot, 0.0)
+    xs, ys = [p[0] for p in poly], [p[1] for p in poly]
+    wheel_y = robot['wheel']['separation']['value'] / 2 + robot['wheel']['width']['value'] / 2
+    assert max(ys) == pytest.approx(-min(ys))
+    assert max(ys) >= wheel_y and max(ys) >= robot['chassis']['width']['value'] / 2
+    assert max(xs) >= robot['wheel']['radius']['value']  # axle at x = 0, near the front
+    assert max(xs) - min(xs) == pytest.approx(robot['chassis']['length']['value'])
+    grown = bringup.footprint(robot, 0.05)
+    assert grown[0][0] == pytest.approx(poly[0][0] + 0.05)
+
+
+def chain(mode, check_joy, joy='auto', arm='auto'):
+    """Return the teleop include args and collision_monitor params for these args."""
+    context = LaunchContext()
+    context.launch_configurations.update({
+        'mode': mode, 'joy': joy, 'arm': arm, 'collision_check_joy': check_joy,
+        'robot_config': str(ROBOT_YAML),
+        'collision_monitor_config': str(PKG / 'config' / 'collision_monitor.yaml')})
+    teleop, monitor, _ = bringup.cmd_vel_chain(context, 'false')
+
+    def text(subs):
+        return subs if isinstance(subs, str) else ''.join(s.perform(context) for s in subs)
+    include = {text(k): text(v) for k, v in teleop.launch_arguments}
+    # launch_ros keeps values as YAML-encoded substitutions
+    params = {text(k): v if isinstance(v, float) else yaml.safe_load(text(v))
+              for d in monitor._Node__parameters if isinstance(d, dict) for k, v in d.items()}
+    return include, params
+
+
+@pytest.mark.parametrize('mode,pad', [('real', 'true'), ('sim', 'false'), ('mock', 'false')])
+def test_chain_through_collision_monitor(mode, pad):
+    include, params = chain(mode, 'true')
+    assert include['cmd_vel_out'] == '/cmd_vel_mux' and include['nav_in'] == '/cmd_vel_nav'
+    assert include['joy'] == pad and include['arm'] == pad
+    assert params['cmd_vel_in_topic'] == '/cmd_vel_mux'
+    assert params['cmd_vel_out_topic'] == '/cmd_vel_safe'
+    assert ('scan.source_timeout' in params) == (mode == 'mock')
+
+
+def test_joy_bypass_moves_monitor_to_nav():
+    include, params = chain('real', 'false', joy='false', arm='false')
+    assert include['cmd_vel_out'] == '/cmd_vel_safe'
+    assert include['nav_in'] == '/cmd_vel_nav_checked'
+    assert include['joy'] == 'false' and include['arm'] == 'false'
+    assert params['cmd_vel_in_topic'] == '/cmd_vel_nav'
+    assert params['cmd_vel_out_topic'] == '/cmd_vel_nav_checked'

@@ -1,0 +1,21 @@
+# twist_mux (TwistStamped in Jazzy). Output ~/cmd_vel_out is remapped by the launch file
+# (/cmd_vel_mux, or /cmd_vel_safe when the joystick bypasses the collision monitor).
+# Safety semantics (riggu_teleop/CLAUDE.md): estop 255 > joy 100 > nav 10.
+
+twist_mux:
+  ros__parameters:
+    use_stamped: true
+    topics:
+      joy:
+        topic: cmd_vel_joy
+        timeout: 0.25          # s; teleop_twist_joy publishes at 20 Hz while the deadman is held
+        priority: 100
+      nav:
+        topic: cmd_vel_nav
+        timeout: 0.5
+        priority: 10
+    locks:
+      estop:
+        topic: estop           # std_msgs/Bool from stop_latch
+        timeout: 0.5           # stop_latch heartbeat; if it dies the lock engages
+        priority: 255
