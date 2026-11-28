@@ -17,7 +17,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Each phase is one feature branc
 ## Cross-cutting conventions
 
 - **Frames (REP-105):** `map → odom → base_footprint → base_link → {left_wheel, right_wheel, caster*, laser, imu_link}`. `odom → base_footprint` belongs to the EKF; `map → odom` to slam_toolbox or AMCL.
-- **Topics:** no namespace (single robot). `/scan`, `/imu`, `/joint_states`, `/odom` (raw wheel), `/odometry/filtered` (EKF), `/cmd_vel_joy`, `/cmd_vel_nav`, `/cmd_vel_mux`, `/cmd_vel_safe` → controller.
+- **Topics:** no namespace (single robot). `/scan`, `/imu`, `/joint_states`, `/odom` (raw wheel, armed only), `/wheel/twist` (EKF wheel input), `/odometry/filtered` (EKF), `/cmd_vel_joy`, `/cmd_vel_nav`, `/cmd_vel_mux`, `/cmd_vel_safe` → controller.
 - **One config for sim and real:** shared `controllers.yaml`, EKF, and Nav2 params; only the ros2_control hardware block and `use_sim_time` differ. Launch arg `mode:=real|sim|mock`.
 - **Zenoh profiles:** rmw_zenoh's default configs plus `ZENOH_CONFIG_OVERRIDE`, set by `scripts/env.sh` (no json5 files; see `config/README.md`):
   - `robot` (Pi): router listens on `tcp/[::]:7447`; local sessions connect to it.
@@ -131,7 +131,7 @@ Tasks
 - BNO055 calibration in the DriveLink app (all four levels at 3, saved), done with the robot in its final configuration.
 - Set IMU covariances in the `imu_sensor_broadcaster` params.
 - `robot_localization` `ekf_node` (`two_d_mode`, 30 Hz):
-  - `odom0`: vx, vy (= 0, non-holonomic) and vyaw from `/odom`.
+  - `twist0`: vx, vy (= 0, non-holonomic) and vyaw from `/wheel/twist` (`riggu_bringup/wheel_twist`, from `/joint_states`). Not `/odom`: `diff_drive_controller` publishes it only while armed.
   - `imu0`: vyaw plus absolute yaw.
   - The `use_imu_orientation` launch arg swaps in a gyro-only config.
 - `diff_drive_controller` `enable_odom_tf: false` (true since Phase 3, while no EKF exists).
