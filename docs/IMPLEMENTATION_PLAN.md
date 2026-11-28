@@ -131,7 +131,7 @@ Tasks
 - BNO055 calibration in the DriveLink app (all four levels at 3, saved), done with the robot in its final configuration.
 - Set IMU covariances in the `imu_sensor_broadcaster` params.
 - `robot_localization` `ekf_node` (`two_d_mode`, 30 Hz):
-  - `odom0`: vx and vyaw from `/odom`.
+  - `odom0`: vx, vy (= 0, non-holonomic) and vyaw from `/odom`.
   - `imu0`: vyaw plus absolute yaw.
   - The `use_imu_orientation` launch arg swaps in a gyro-only config.
 - `diff_drive_controller` `enable_odom_tf: false` (true since Phase 3, while no EKF exists).
