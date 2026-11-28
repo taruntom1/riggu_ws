@@ -27,7 +27,9 @@ imu:=false drops the `imu` sensor from the expanded ros2_control block and the
 imu_sensor_broadcaster (robot without an IMU; DriveLink refuses a missing instance).
 
 robot_localization ekf_node (every mode) owns odom -> base_footprint and publishes
-/odometry/filtered from /odom and /imu (config/ekf.yaml). use_imu_orientation:=false
+/odometry/filtered from /wheel/twist and /imu (config/ekf.yaml). wheel_twist turns
+/joint_states into /wheel/twist, armed or not (diff_drive_controller's /odom stops
+while it is inactive). use_imu_orientation:=false
 fuses the gyro only (config/ekf_gyro_only.yaml); imu:=false fuses wheel odometry only.
 
 cmd_vel chain (riggu_teleop/teleop.launch.py + nav2 collision_monitor):
@@ -119,10 +121,21 @@ def ekf_params(context):
 
 
 def ekf(context, use_sim_time):
-    """robot_localization ekf_node: odom -> base_footprint, /odometry/filtered."""
-    return [Node(package='robot_localization', executable='ekf_node', name='ekf_filter_node',
-                 parameters=[ekf_params(context), {'use_sim_time': use_sim_time}],
-                 output='screen')]
+    """wheel_twist (/joint_states -> /wheel/twist) and the robot_localization ekf_node."""
+    with open(LaunchConfiguration('robot_config').perform(context), encoding='utf-8') as f:
+        wheel = yaml.safe_load(f)['wheel']
+    wheel_params = {'wheel_radius': float(wheel['radius']['value']),
+                    'wheel_separation': float(wheel['separation']['value']),
+                    'use_sim_time': use_sim_time}
+    config = PathJoinSubstitution(
+        [FindPackageShare('riggu_bringup'), 'config', 'wheel_twist.yaml'])
+    return [
+        Node(package='riggu_bringup', executable='wheel_twist', name='wheel_twist',
+             parameters=[config, wheel_params], output='screen'),
+        Node(package='robot_localization', executable='ekf_node', name='ekf_filter_node',
+             parameters=[ekf_params(context), {'use_sim_time': use_sim_time}],
+             output='screen'),
+    ]
 
 
 def footprint(robot, margin):

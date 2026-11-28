@@ -28,6 +28,7 @@
   <exec_depend>drivelink_bringup</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>ament_index_python</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
@@ -36,7 +37,6 @@
   <test_depend>launch_testing_ament_cmake</test_depend>
   <test_depend>launch_testing_ros</test_depend>
   <test_depend>controller_manager_msgs</test_depend>
-  <test_depend>geometry_msgs</test_depend>
   <test_depend>nav_msgs</test_depend>
   <test_depend>tf2_msgs</test_depend>
 

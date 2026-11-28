@@ -11,6 +11,9 @@ install(PROGRAMS scripts/calibrate_wheels.py
 install(PROGRAMS scripts/odom_check.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME odom_check)
+install(PROGRAMS scripts/wheel_twist.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME wheel_twist)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -25,6 +28,7 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_calibrate_wheels test/test_calibrate_wheels.py)
   ament_add_pytest_test(test_bringup_launch test/test_bringup_launch.py)
   ament_add_pytest_test(test_odom_check test/test_odom_check.py)
+  ament_add_pytest_test(test_wheel_twist test/test_wheel_twist.py)
 endif()
 
 ament_package()

@@ -173,21 +173,22 @@ def test_ekf_fuses_wheels_and_imu():
     params = ekf()
     assert params['two_d_mode'] and params['frequency'] == 30.0
     assert (params['world_frame'], params['base_link_frame']) == ('odom', 'base_footprint')
-    assert params['odom0'] == '/odom' and params['imu0'] == '/imu'
-    assert [i for i, on in enumerate(params['odom0_config']) if on] == [VX, VY, VYAW]
+    assert params['twist0'] == '/wheel/twist' and params['imu0'] == '/imu'
+    assert not [k for k in params if k.startswith('odom0')]  # /odom stops while disarmed
+    assert [i for i, on in enumerate(params['twist0_config']) if on] == [VX, VY, VYAW]
     assert [i for i, on in enumerate(params['imu0_config']) if on] == [YAW, VYAW]
 
 
 def test_ekf_gyro_only_drops_absolute_yaw():
     params = ekf(orientation='false')
     assert [i for i, on in enumerate(params['imu0_config']) if on] == [VYAW]
-    assert params['odom0_config'] == ekf()['odom0_config']
+    assert params['twist0_config'] == ekf()['twist0_config']
 
 
 def test_ekf_without_imu_uses_wheels_only():
     params = ekf(imu='false')
     assert not [k for k in params if k.startswith('imu0')]
-    assert params['odom0'] == '/odom'
+    assert params['twist0'] == '/wheel/twist'
 
 
 def test_only_the_ekf_publishes_odom_tf():

@@ -16,7 +16,8 @@
 bringup.launch.py mode:=mock: controllers, then the cmd_vel chain end to end.
 
 /cmd_vel_nav and a fake /joy go through twist_mux -> collision_monitor -> /cmd_vel_safe;
-the EKF follows /odom on /odometry/filtered and owns the odom -> base_footprint TF;
+the EKF follows the wheels on /odometry/filtered, owns the odom -> base_footprint TF and
+stays bounded while disarmed (/wheel/twist from /joint_states);
 the pad nodes and the arm switch run (joy:=true arm:=true) on the test's /joy.
 Button and axis indices come from riggu_teleop/config/joy_generic.yaml.
 """
@@ -213,6 +214,10 @@ class TestBringupMock(unittest.TestCase):
         inactive = self.spin_until(
             lambda: 'diff_drive_controller' not in self.active_controllers(), 5)
         self.assertTrue(inactive, 'disarm button did not deactivate the drive')
+        # disarmed: no /odom, but /wheel/twist keeps the EKF velocity measured and bounded
+        self.drive(3.0, buttons=[])
+        var_vx = self.latest['/odometry/filtered'].twist.covariance[0]
+        self.assertLess(var_vx, 0.01, f'EKF vx variance {var_vx} while disarmed')
         self.drive(ARM['arm_hold'] * 0.5, buttons=ARM['arm_buttons'])  # too short
         self.assertNotIn('diff_drive_controller', self.active_controllers())
         self.drive(0.5, buttons=[])
