@@ -31,7 +31,7 @@ import threading
 
 from ament_index_python.packages import get_package_share_directory
 import rclpy
-from rclpy.executors import ExternalShutdownException
+from rclpy.executors import SingleThreadedExecutor
 from sensor_msgs.msg import JointState
 import yaml
 
@@ -90,7 +90,9 @@ def main():
                 latest[name] = pos
 
     node.create_subscription(JointState, '/joint_states', on_joints, 10)
-    spinner = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
+    executor = SingleThreadedExecutor()
+    executor.add_node(node)
+    spinner = threading.Thread(target=executor.spin, daemon=True)
     spinner.start()
 
     def snapshot(prompt):
@@ -105,9 +107,12 @@ def main():
               f'wheel.separation {separation:.4f} m')
         start = snapshot('Robot at the start mark. Enter to record... ')
         end = snapshot(f'Drive the {args.test} test now, then stop. Enter to record... ')
-    except (KeyboardInterrupt, EOFError, ExternalShutdownException):
+    except (KeyboardInterrupt, EOFError):
         return
     finally:
+        # stop spinning before tearing down, or the spin thread raises
+        executor.shutdown()
+        spinner.join(timeout=2.0)
         node.destroy_node()
         rclpy.try_shutdown()
 

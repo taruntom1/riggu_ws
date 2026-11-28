@@ -37,7 +37,7 @@ ros2 launch riggu_description display.launch.py
 
 The geometry tests fail if the parts stop fitting (wheel or caster off the floor, wheels inside the chassis, scan plane below the deck or wheel tops, IMU outside the chassis). Phase 4 writes calibrated `wheel.radius` / `wheel.separation` here; `diff_drive_controller` reads the same file.
 
-Current state: wheel radius and separation from the old DriveLink config; chassis, caster and IMU are estimates; C1 from its datasheet. Sensor poses are verified in Phase 4.
+Current state: wheel radius and separation calibrated on the real robot (Phase 4, 2026-11-28); chassis, caster and IMU are estimates; C1 from its datasheet. Sensor poses are verified in Phase 4.
 
 ## Notes
 - `display.launch.py` needs `rviz2` and `joint_state_publisher_gui` (dev profile / Docker image). They are deliberately not in `package.xml`, so they stay off the Pi.
