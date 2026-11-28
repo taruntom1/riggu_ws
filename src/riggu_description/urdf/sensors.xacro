@@ -42,6 +42,21 @@
     </visual>
   </link>
 
+  <!-- gz IMU noise on x, y, z of one quantity -->
+  <xacro:macro name="imu_axis_noise" params="stddev bias axes:=${['x', 'y', 'z']}">
+    <xacro:if value="${axes}">
+      <xacro:element xacro:name="${axes[0]}">
+        <noise type="gaussian">
+          <mean>0.0</mean>
+          <stddev>${stddev}</stddev>
+          <bias_mean>0.0</bias_mean>
+          <bias_stddev>${bias}</bias_stddev>
+        </noise>
+      </xacro:element>
+      <xacro:imu_axis_noise stddev="${stddev}" bias="${bias}" axes="${axes[1:]}"/>
+    </xacro:if>
+  </xacro:macro>
+
   <xacro:if value="${mode == 'sim'}">
     <gazebo reference="laser">
       <sensor name="laser" type="gpu_lidar">
@@ -79,6 +94,14 @@
         <always_on>true</always_on>
         <update_rate>${imu.rate.value}</update_rate>
         <gz_frame_id>imu_link</gz_frame_id>
+        <imu>
+          <angular_velocity>
+            <xacro:imu_axis_noise stddev="${imu.gyro_noise_stddev.value}" bias="${imu.gyro_bias_stddev.value}"/>
+          </angular_velocity>
+          <linear_acceleration>
+            <xacro:imu_axis_noise stddev="${imu.accel_noise_stddev.value}" bias="${imu.accel_bias_stddev.value}"/>
+          </linear_acceleration>
+        </imu>
       </sensor>
     </gazebo>
   </xacro:if>
