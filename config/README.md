@@ -5,6 +5,7 @@ Machine-level configuration that isn't part of a ROS package.
 | Path | Purpose |
 |---|---|
 | `tailscale/riggu-policy.hujson` | Policy for the dedicated riggu tailnet: `autogroup:member` + `autogroup:shared` → `tag:robot` on tcp 22, 7447, 47620 and ICMP; the robot gets no outbound rules |
+| `drivelink/agent.json` | Template for `/etc/drivelink/agent.json`: alias `base` → `serial://@PORT@`, bind `0.0.0.0:47620` (token-protected; reachable over the tailnet and the hotspot portproxy). Installed by `setup_local.sh --profile robot`, which fills `@PORT@` with `/dev/drivelink/<serial>` |
 | `udev/99-riggu.rules` | `/dev/rplidar` (C1, CP210x `10c4:ea60`). DriveLink (CH343 `1a86:55d3`) ships its own `/dev/drivelink/<serial>` |
 
 ## Zenoh profiles

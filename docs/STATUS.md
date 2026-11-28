@@ -1,14 +1,14 @@
 # Status
 
-Updated 2026-11-28. Next phase: **3** (in review). Run a phase with `/implement-phase <n>`.
+Updated 2026-11-28. Next phase: **4** (in review). Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
 | 0 | Host tooling and repo | done | `phase/0-host-tooling` · [PR #1](https://github.com/taruntom1/riggu_ws/pull/1) |
 | 1 | Workspace, Docker, setup scripts, CI | done | `phase/1-workspace` · [PR #2](https://github.com/taruntom1/riggu_ws/pull/2) |
 | 2 | Robot description (URDF) | done | `phase/2-description` · [PR #3](https://github.com/taruntom1/riggu_ws/pull/3) |
-| 3 | Simulated drive | review | `phase/3-sim-drive` · [PR #4](https://github.com/taruntom1/riggu_ws/pull/4) |
-| 4 | Real base bring-up | todo | — |
+| 3 | Simulated drive | done | `phase/3-sim-drive` · [PR #4](https://github.com/taruntom1/riggu_ws/pull/4) |
+| 4 | Real base bring-up | review | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) |
 | 5 | Joystick, twist_mux, safety | todo | — |
 | 6 | EKF fusion | todo | — |
 | 7 | Mapping and localisation | todo | — |
@@ -18,7 +18,9 @@ Updated 2026-11-28. Next phase: **3** (in review). Run a phase with `/implement-
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 3:** GUI check: keyboard teleop in Gazebo, and scan/odom in RViz (commands in PR #4). Then review and merge PR #4.
+- **Phase 4:** review and merge PR #5.
+- **IMU:** fit the BNO055, add an `imu.bno055` instance labelled `imu` on the DriveLink board, then run Phase 4 check 3 (IMU axes) before Phase 6.
+- **USB EMI:** both the C1 and the DriveLink USB links dropped once under motor load; secure and shield the cables (ferrites, routing away from motor wiring).
 - **Any time:** tape-measure the `source: estimate` values in `src/riggu_description/config/robot.yaml` (chassis, caster, IMU, wheel width) and weigh the robot.
 
 ## Known environment facts
@@ -38,6 +40,8 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
 - Pi: Ubuntu 24.04.4 aarch64, avahi active, key SSH works, passwordless sudo, Tailscale 1.104.7.
 - Pi already has ros-jazzy-ros-base and DriveLink 0.2.1 (agent, cli 0.2.0, bringup). DriveLink board: CH343 `1a86:55d3` → `/dev/ttyACM0`, `/dev/drivelink/5B5E080149`.
 - Dev image `riggu_ws:jazzy-dev` (7.1 GB). On WSL, GL is Mesa D3D12 on the RTX 4050 (OpenGL 4.6).
+- DriveLink board (2026-11-28): controllers `pid_left`/`pid_right` (velocity mode, cascade PID), encoders 7385 counts/wheel rev, no IMU instance yet. Agent on `0.0.0.0:47620`.
+- The laptop clock drifted 92 s behind the Pi once; Windows "Sync now" fixed it. Laptop teleop needs synced clocks (`cmd_vel_timeout` uses the stamp).
 - DriveLink macro: `drivelink_diff_drive(name agent device token_file token left_joint left_label right_joint right_label imu_label)`.
 
 ## Decisions / deviations
@@ -61,3 +65,9 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
 - **Phase 3, world:** hand-written primitive `house.sdf` (10×8 m, 4 rooms), no Fuel models (user's choice). CI runs only the mock launch test; Gazebo is checked locally, headless (user's choice).
 - **Phase 3, sim wheels:** sphere collisions in `sim` only. With cylinders, in-place turns ran ~7% faster than odometry.
 - **Phase 3, params:** wheel radius/separation and velocity/acceleration limits (new `limits.max_*_accel`, estimates) go from `robot.yaml` to `diff_drive_controller` as spawner `--controller-ros-args`. Sim IMU noise/bias values added to `robot.yaml`.
+- **Phase 4, arming:** `mode:=real` loads `diff_drive_controller` inactive (as DriveLink's example does); arming is an explicit `switch_controllers --activate` (user's choice). DriveLink `diagnostics` runs in real mode for fault ack/recover.
+- **Phase 4, agent bind:** `0.0.0.0:47620` (token-protected), plus a portproxy `127.0.0.1:47620` rule for the offline path (user's choice). Config template `config/drivelink/agent.json`.
+- **Phase 4, IMU:** BNO055 not fitted yet. `bringup.launch.py imu:=false` strips the `imu` sensor from the expanded DriveLink block and skips `imu_sensor_broadcaster`; [drivelink_v2#135](https://github.com/taruntom1/drivelink_v2/issues/135) asks for an optional IMU in the macro (user's choice: both). IMU check 3 waits for the IMU.
+- **Phase 4, calibration:** wheel radius 0.06374 m, separation 0.3853 m (`calibrated`); verification 1 % straight, 0.2 % turns. Lidar yaw 0 verified (`measured`).
+- **Phase 4, recovery:** `drivelink_diagnostics` `recovery_controllers` excludes `diff_drive_controller`, so `recover` never arms (same rule as launch).
+- **Phase 4, IMU check 3:** deferred until the BNO055 is fitted (before Phase 6).

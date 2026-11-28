@@ -21,9 +21,9 @@
 # --packages-select riggu_description` (it checks that the parts still fit).
 
 wheel:
-  radius:     {value: 0.06675, source: old_config, note: "DriveLink node_config.yaml wheel_radius"}
+  radius:     {value: 0.06374, source: calibrated, note: "2026-11-28 calibrate_wheels straight 2.0 (was 0.06675 old_config)"}
   width:      {value: 0.030,   source: estimate}
-  separation: {value: 0.390,   source: old_config, note: "centre-to-centre track; DriveLink node_config.yaml wheel_base"}
+  separation: {value: 0.3853,  source: calibrated, note: "2026-11-28 calibrate_wheels turns 10, with radius 0.06374 (was 0.390 old_config)"}
   mass:       {value: 0.100,   source: estimate, note: "per wheel incl. hub"}
 
 chassis:
@@ -44,7 +44,7 @@ lidar:  # RPLIDAR C1
   y_from_centreline:     {value: 0.0,    source: user, note: "+y left"}
   base_above_deck:       {value: 0.0,    source: estimate, note: "spacer height under the C1"}
   scan_plane_above_base: {value: 0.026,  source: estimate, note: "C1 mounting face to optical plane"}
-  yaw:                   {value: 0.0,    source: old_config, note: "0 deg points forward (old sllidar inverted:=false); verify in Phase 4"}
+  yaw:                   {value: 0.0,    source: measured, note: "2026-11-28 Phase 4 check 4: object ahead shows on +x in RViz"}
   size:                  {value: 0.0556, source: datasheet, note: "body width/depth"}
   height:                {value: 0.0413, source: datasheet}
   mass:                  {value: 0.110,  source: datasheet}
