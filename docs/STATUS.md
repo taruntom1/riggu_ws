@@ -11,7 +11,7 @@ Updated 2026-11-28. Next phase: **7** (in review). Run a phase with `/implement-
 | 4 | Real base bring-up | done | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) |
 | 5 | Joystick, twist_mux, safety | done | `phase/5-teleop-safety` · [PR #6](https://github.com/taruntom1/riggu_ws/pull/6) |
 | 6 | EKF fusion | done | `phase/6-ekf` · [PR #8](https://github.com/taruntom1/riggu_ws/pull/8) |
-| 7 | Mapping and localisation | review | `phase/7-mapping` · PR_LINK |
+| 7 | Mapping and localisation | review | `phase/7-mapping` · [PR #9](https://github.com/taruntom1/riggu_ws/pull/9) |
 | 8 | Navigation | todo | — |
 | 9 | Hardening and docs | todo | — |
 
