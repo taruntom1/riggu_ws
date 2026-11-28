@@ -1,6 +1,6 @@
 # Status
 
-Updated 2026-11-28. Next phase: **4** (in progress). Run a phase with `/implement-phase <n>`.
+Updated 2026-11-28. Next phase: **4** (blocked: Pi offline). Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
@@ -8,7 +8,7 @@ Updated 2026-11-28. Next phase: **4** (in progress). Run a phase with `/implemen
 | 1 | Workspace, Docker, setup scripts, CI | done | `phase/1-workspace` · [PR #2](https://github.com/taruntom1/riggu_ws/pull/2) |
 | 2 | Robot description (URDF) | done | `phase/2-description` · [PR #3](https://github.com/taruntom1/riggu_ws/pull/3) |
 | 3 | Simulated drive | done | `phase/3-sim-drive` · [PR #4](https://github.com/taruntom1/riggu_ws/pull/4) |
-| 4 | Real base bring-up | in progress | `phase/4-real-base` |
+| 4 | Real base bring-up | blocked (Pi offline) | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) (draft) |
 | 5 | Joystick, twist_mux, safety | todo | — |
 | 6 | EKF fusion | todo | — |
 | 7 | Mapping and localisation | todo | — |
