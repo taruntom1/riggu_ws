@@ -144,9 +144,9 @@ Done when: after a 4 m square driven by joystick, the EKF ends closer to the sta
 
 Tasks
 - `riggu_navigation`:
-  - `slam.launch.py` (slam_toolbox online async, 5 cm resolution, C1 range limits).
-  - `localization.launch.py` (map_server + AMCL, diff-drive motion model).
-- Map save helper `scripts/save_map.sh <name>`. Maps go to `~/riggu_maps` on the Pi; the sim reference map is committed under `riggu_navigation/maps/`.
+  - `slam.launch.py` (slam_toolbox online async, 5 cm resolution, C1 range limits from `robot.yaml`).
+  - `localization.launch.py` (map_server + AMCL, diff-drive motion model). Both under nav2 lifecycle managers.
+- Map save helper `scripts/save_map.sh <name>`: map (pgm/yaml) plus the slam_toolbox pose graph. Maps go to `~/riggu_maps` on the Pi; the sim reference map is committed under `riggu_navigation/maps/`.
 - RViz configs for mapping and navigation.
 
 Done when: clean maps of the sim house and of a real room exist, and AMCL converges from a rough initial pose within one short drive.
@@ -192,4 +192,6 @@ Tasks
 | Robot reachability and isolation | Tailscale share from a dedicated tailnet (Pi can't reach sharees). Offline fallback: hotspot + Windows `netsh portproxy`; re-run it if the Pi's hotspot IP changes |
 | Clock skew between Pi and laptop breaking RViz TF | chrony on the Pi; the laptop only visualises |
 | USB drops under motor load (2026-11-28: C1 port "disabled by hub (EMI?)", DriveLink CH343 re-enumerated) | Short shielded cables / ferrites, motor power wiring away from USB; sllidar respawns and `/dev/rplidar` follows; DriveLink link loss → hardware `unconfigured`, `recover` restores it disarmed |
+| Collision monitor `approach` polygon in doorways (Phase 7 sim): turning in place sweeps the footprint's rear corners (~0.35 m) into a 0.9 m door frame or a counter, and the monitor stops it | Drive straight through doors; Phase 8 sizes MPPI/costmap inflation and the monitor polygons for it |
+| nav2 lifecycle bond (4 s) drops under host CPU starvation (Phase 7 sim, during a Docker Desktop start): the collision monitor shut down and `/cmd_vel_safe` stopped (fail-safe) | Watch in Phase 8 Pi profiling; `bond_timeout` only if it recurs on the Pi |
 | Pi 5 CPU under SLAM + Nav2 | MPPI batch and rate tuning, costmap update rates, Phase 8 profiling |
