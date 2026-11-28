@@ -1,6 +1,6 @@
 # Status
 
-Updated 2026-11-28. Next phase: **5** (in review). Run a phase with `/implement-phase <n>`.
+Updated 2026-11-28. Next phase: **6** (in review). Run a phase with `/implement-phase <n>`.
 
 | # | Phase | State | Branch / PR |
 |---|---|---|---|
@@ -9,8 +9,8 @@ Updated 2026-11-28. Next phase: **5** (in review). Run a phase with `/implement-
 | 2 | Robot description (URDF) | done | `phase/2-description` · [PR #3](https://github.com/taruntom1/riggu_ws/pull/3) |
 | 3 | Simulated drive | done | `phase/3-sim-drive` · [PR #4](https://github.com/taruntom1/riggu_ws/pull/4) |
 | 4 | Real base bring-up | done | `phase/4-real-base` · [PR #5](https://github.com/taruntom1/riggu_ws/pull/5) |
-| 5 | Joystick, twist_mux, safety | review | `phase/5-teleop-safety` · [PR #6](https://github.com/taruntom1/riggu_ws/pull/6) |
-| 6 | EKF fusion | todo | — |
+| 5 | Joystick, twist_mux, safety | done | `phase/5-teleop-safety` · [PR #6](https://github.com/taruntom1/riggu_ws/pull/6) |
+| 6 | EKF fusion | review | `phase/6-ekf` · [PR #8](https://github.com/taruntom1/riggu_ws/pull/8) |
 | 7 | Mapping and localisation | todo | — |
 | 8 | Navigation | todo | — |
 | 9 | Hardening and docs | todo | — |
@@ -18,8 +18,8 @@ Updated 2026-11-28. Next phase: **5** (in review). Run a phase with `/implement-
 States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blocked`
 
 ## Needs from user
-- **Phase 5:** pad-off check (wheels up: hold LB+stick, unplug the pad, wheels stop within ~0.5 s), a short floor drive, then review and merge PR #6. After the merge: `git checkout main && scripts/deploy.sh` on the Pi (needs internet there).
-- **IMU:** fit the BNO055, add an `imu.bno055` instance labelled `imu` on the DriveLink board, then run Phase 4 check 3 (IMU axes) before Phase 6.
+- **Phase 6:** review and merge the PR. The Pi runs `phase/6-ekf`; after the merge: `git checkout main && scripts/deploy.sh` on the Pi. `/etc/default/riggu-base` (`imu:=true`) is now redundant and can be removed.
+- **Phase 6, optional:** one fresh square + spin with `odom_check` to confirm the gyro scale out of sample (the replay's spin is in-sample).
 - **USB EMI:** both the C1 and the DriveLink USB links dropped once under motor load; secure and shield the cables (ferrites, routing away from motor wiring).
 - **Any time:** tape-measure the `source: estimate` values in `src/riggu_description/config/robot.yaml` (chassis, caster, IMU, wheel width) and weigh the robot.
 
@@ -40,7 +40,7 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
 - Pi: Ubuntu 24.04.4 aarch64, avahi active, key SSH works, passwordless sudo, Tailscale 1.104.7.
 - Pi already has ros-jazzy-ros-base and DriveLink 0.2.1 (agent, cli 0.2.0, bringup). DriveLink board: CH343 `1a86:55d3` → `/dev/ttyACM0`, `/dev/drivelink/5B5E080149`.
 - Dev image `riggu_ws:jazzy-dev` (7.1 GB). On WSL, GL is Mesa D3D12 on the RTX 4050 (OpenGL 4.6).
-- DriveLink board (2026-11-28): controllers `pid_left`/`pid_right` (velocity mode, cascade PID), encoders 7385 counts/wheel rev, no IMU instance yet. Agent on `0.0.0.0:47620`.
+- DriveLink board (2026-11-28): controllers `pid_left`/`pid_right` (velocity mode, cascade PID), encoders 7385 counts/wheel rev, `imu` (`imu.bno055`, NDOF, calibration saved). The BNO055 chip is yawed 180° to `base_link`; its gyro reads 3.2 % fast. Agent on `0.0.0.0:47620`.
 - The laptop clock drifted 92 s behind the Pi once; Windows "Sync now" fixed it. Laptop teleop needs synced clocks (`cmd_vel_timeout` uses the stamp).
 - Pad: USB "ShanWan" PlayStation-shape pad, enumerates as Xbox 360 (`045e:028e`, xpad) → `/dev/input/js0`. Mapping in `riggu_teleop/config/joy_generic.yaml`.
 - DriveLink macro: `drivelink_diff_drive(name agent device token_file token left_joint left_label right_joint right_label imu_label)`.
@@ -71,8 +71,11 @@ States: `todo` · `in progress` · `review` (PR open) · `done` (merged) · `blo
 - **Phase 4, IMU:** BNO055 not fitted yet. `bringup.launch.py imu:=false` strips the `imu` sensor from the expanded DriveLink block and skips `imu_sensor_broadcaster`; [drivelink_v2#135](https://github.com/taruntom1/drivelink_v2/issues/135) asks for an optional IMU in the macro (user's choice: both). IMU check 3 waits for the IMU.
 - **Phase 4, calibration:** wheel radius 0.06374 m, separation 0.3853 m (`calibrated`); verification 1 % straight, 0.2 % turns. Lidar yaw 0 verified (`measured`).
 - **Phase 4, recovery:** `drivelink_diagnostics` `recovery_controllers` excludes `diff_drive_controller`, so `recover` never arms (same rule as launch).
-- **Phase 4, IMU check 3:** deferred until the BNO055 is fitted (before Phase 6).
+- **Phase 4, IMU check 3:** done in Phase 6 (2026-11-28) by hand tilts: z up, chip yawed 180° (`imu.yaw` π).
 - **Phase 5, arming:** the pad arms (deadman LB + Start held 1 s → `diff_drive_controller` active) and disarms (Back) through `riggu_teleop/arm_switch`; boot and launch stay disarmed (user's choice).
 - **Phase 5, collision monitor:** baseline is one `approach` polygon (footprint from `robot.yaml` + 3 cm, 1 s horizon); a stale `/scan` stops. Joystick bypass is the launch arg `collision_check_joy:=false` (monitor moves onto `/cmd_vel_nav`). Mock disables the scan timeout.
 - **Phase 5, `/estop`:** a 10 Hz heartbeat with a 0.5 s twist_mux lock timeout, so a dead `stop_latch` locks the output. `~/set` (SetBool) latches it from the laptop.
+- **Phase 6, IMU heading:** default `use_imu_orientation:=false` (gyro-only). Floor tests with ground truth showed the magnetometer heading drifting 3–6° on straights; the BNO055 gyro reads 3.2 % fast, corrected by a new `imu_scale` node (user's choice), with a firmware fix requested in [drivelink_v2#136](https://github.com/taruntom1/drivelink_v2/issues/136) (Phase 9 to-do). Validated by replaying a rosbag, not a fresh run (user's choice): the spin result is in-sample for the scale.
+- **Phase 6, IMU mount:** the chip is yawed 180° (`imu.yaw` π, measured); about 5° tilt at rest is ignored in 2D. `wheel_twist` differences encoder positions: DriveLink's velocity state integrates about 1 % off.
+- **Phase 6, EKF inputs:** the wheel input is a new `wheel_twist` node (`/joint_states` → `/wheel/twist`), not `/odom`, which stops while disarmed and made the EKF diverge on the robot (user's choice). It also fuses vy (= 0), as robot_localization recommends for a diff drive; IMU yaw is `imu0_relative` (odom starts at yaw 0). The EKF runs in every mode, and `imu:=false` drops `imu0`. `riggu-base` now starts with the IMU on.
 - **Phase 5, pad recovery:** the arm combo calls `/drivelink_diagnostics/recover` first when the hardware isn't active (user's choice), so a link loss is recoverable without a laptop. Seen once: link loss 52 s after a boot ("no fresh sample", no USB disconnect), when Wi-Fi and chrony came up; cause open.

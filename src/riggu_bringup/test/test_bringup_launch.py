@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""bringup.launch.py: drive inactive on real, imu:=false, cmd_vel chain wiring, footprint."""
+"""bringup.launch.py: drive inactive on real, imu:=false, cmd_vel chain, footprint, EKF."""
 
 import importlib.util
 from pathlib import Path
@@ -155,3 +155,62 @@ def test_joy_bypass_moves_monitor_to_nav():
     assert include['joy'] == 'false' and include['arm'] == 'false'
     assert params['cmd_vel_in_topic'] == '/cmd_vel_nav'
     assert params['cmd_vel_out_topic'] == '/cmd_vel_nav_checked'
+
+
+def ekf(imu='true', orientation='true'):  # orientation: the non-default variant
+    context = LaunchContext()
+    context.launch_configurations.update({
+        'imu': imu, 'use_imu_orientation': orientation,
+        'ekf_config': str(PKG / 'config' / 'ekf.yaml'),
+        'ekf_gyro_only_config': str(PKG / 'config' / 'ekf_gyro_only.yaml')})
+    return bringup.ekf_params(context)
+
+
+YAW, VX, VY, VYAW = 5, 6, 7, 11
+
+
+def test_ekf_fuses_wheels_and_imu():
+    params = ekf()
+    assert params['two_d_mode'] and params['frequency'] == 30.0
+    assert (params['world_frame'], params['base_link_frame']) == ('odom', 'base_footprint')
+    assert params['twist0'] == '/wheel/twist' and params['imu0'] == '/imu/corrected'
+    assert not [k for k in params if k.startswith('odom0')]  # /odom stops while disarmed
+    assert [i for i, on in enumerate(params['twist0_config']) if on] == [VX, VY, VYAW]
+    assert [i for i, on in enumerate(params['imu0_config']) if on] == [YAW, VYAW]
+
+
+def test_ekf_gyro_only_drops_absolute_yaw():
+    params = ekf(orientation='false')
+    assert [i for i, on in enumerate(params['imu0_config']) if on] == [VYAW]
+    assert params['twist0_config'] == ekf()['twist0_config']
+
+
+def test_ekf_without_imu_uses_wheels_only():
+    params = ekf(imu='false')
+    assert not [k for k in params if k.startswith('imu0')]
+    assert params['twist0'] == '/wheel/twist'
+
+
+def test_only_the_ekf_publishes_odom_tf():
+    controllers = yaml.safe_load((PKG / 'config' / 'controllers.yaml').read_text())
+    assert controllers['diff_drive_controller']['ros__parameters']['enable_odom_tf'] is False
+    assert ekf()['publish_tf'] is True
+
+
+@pytest.mark.parametrize('mode,expected', [('sim', 1.0), ('mock', 1.0)])
+def test_gyro_scale_only_on_real(mode, expected):
+    context = LaunchContext()
+    context.launch_configurations.update({'mode': mode, 'robot_config': str(ROBOT_YAML)})
+    assert bringup.gyro_z_scale(context) == expected
+
+
+def test_gyro_scale_real_from_robot_yaml():
+    context = LaunchContext()
+    context.launch_configurations.update({'mode': 'real', 'robot_config': str(ROBOT_YAML)})
+    robot = yaml.safe_load(ROBOT_YAML.read_text())
+    assert bringup.gyro_z_scale(context) == robot['imu']['gyro_z_scale']['value'] != 1.0
+
+
+def test_default_is_gyro_only():
+    launch = (PKG / 'launch' / 'bringup.launch.py').read_text()
+    assert "DeclareLaunchArgument('use_imu_orientation', default_value='false'" in launch

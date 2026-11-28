@@ -1,0 +1,12 @@
+# Overrides on top of ekf.yaml for use_imu_orientation:=false (the launch default): the IMU
+# contributes vyaw only (gyro, scale-corrected by imu_scale), no absolute yaw. 2026-11-28
+# floor replay: 1 m square 1.2 cm / -1.6 deg, 360 deg spin +0.2 deg; with the magnetometer
+# heading 5.9 cm / -6.5 deg and -0.5 deg; wheels alone 3.6 cm / +2.4 deg and +6.7 deg.
+
+ekf_filter_node:
+  ros__parameters:
+    imu0_config: [false, false, false,
+                  false, false, false,
+                  false, false, false,
+                  false, false, true,
+                  false, false, false]
