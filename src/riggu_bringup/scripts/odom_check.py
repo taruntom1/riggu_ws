@@ -20,7 +20,10 @@ Press Enter at a floor mark, drive a closed path that ends back on the mark (a s
 N full spins in place), press Enter again. Per source it prints the distance from the
 start and the yaw change, unwrapped, with its residual from the nearest whole turn: on a
 closed path both are the source's error. It also prints the largest IMU-minus-wheel yaw
-gap seen during the run (motor magnets disturbing BNO055 heading show up there).
+gap seen during the run (motor magnets disturbing BNO055 heading show up there), and the
+raw /imu yaw rate integrated over the run with the gyro scale it implies (integral over
+the nearest whole number of turns): after N spins on a mark, that is robot.yaml
+imu.gyro_z_scale.
 """
 
 import argparse
@@ -62,6 +65,12 @@ def turn_residual(dyaw):
     return dyaw - 2.0 * math.pi * round(dyaw / (2.0 * math.pi))
 
 
+def gyro_scale(integral):
+    """Gyro scale implied by a yaw-rate integral (rad) over a whole number of turns."""
+    turns = round(integral / (2.0 * math.pi))
+    return integral / (2.0 * math.pi * turns) if turns else None
+
+
 def report(start, end):
     """Lines describing each source's change between two snapshots {topic: (yaw, xy)}."""
     lines = []
@@ -88,6 +97,7 @@ def main():
     tracks = {t: Track() for t in SOURCES}
     lock = threading.Lock()
     gap = {'base': None, 'max': 0.0, 'running': False}
+    gyro = {'integral': 0.0, 'stamp': None}
 
     def on_odom(topic, msg):
         p = msg.pose.pose
@@ -96,8 +106,12 @@ def main():
             watch()
 
     def on_imu(msg):
+        stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
         with lock:
             tracks['/imu'].update(yaw_of(msg.orientation))
+            if gap['running'] and gyro['stamp'] is not None and 0.0 < stamp - gyro['stamp'] < 0.5:
+                gyro['integral'] += msg.angular_velocity.z * (stamp - gyro['stamp'])
+            gyro['stamp'] = stamp
             watch()
 
     def watch():
@@ -132,6 +146,7 @@ def main():
         end = snapshot()
         with lock:
             max_gap = gap['max'] if gap['base'] is not None else None
+            integral = gyro['integral']
     except (KeyboardInterrupt, EOFError):
         return
     finally:
@@ -143,6 +158,10 @@ def main():
     print('\n'.join(report(start, end)))
     if max_gap is not None:
         print(f'max |IMU yaw - wheel yaw| drift during the run: {math.degrees(max_gap):.2f} deg')
+    scale = gyro_scale(integral)
+    print(f'raw /imu yaw rate integral: {math.degrees(integral):+.2f} deg'
+          + (f' -> gyro_z_scale {scale:.4f} if that was {round(integral / (2 * math.pi))} '
+             'whole turn(s)' if scale else ''))
 
 
 if __name__ == '__main__':

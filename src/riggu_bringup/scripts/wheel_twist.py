@@ -21,6 +21,10 @@ report through joint_state_broadcaster at all times, so this keeps the EKF's vel
 measured while disarmed (standing still, or pushed by hand) and its state bounded.
 wheel_radius and wheel_separation come from riggu_description/config/robot.yaml
 (passed by bringup.launch.py), the same values diff_drive_controller uses.
+
+Wheel rates are differenced from encoder positions between consecutive messages, as
+diff_drive_controller does with position_feedback: DriveLink's velocity state integrates
+~1 % differently from the encoder counts (measured 2026-11-28).
 """
 
 from geometry_msgs.msg import TwistWithCovarianceStamped
@@ -28,6 +32,17 @@ import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
+
+
+MAX_GAP = 0.5  # s; a longer gap between /joint_states restarts the differencing
+
+
+def wheel_rates(previous, current):
+    """(left, right) rad/s between two (stamp_s, left_pos, right_pos) samples, or None."""
+    dt = current[0] - previous[0]
+    if dt <= 0.0 or dt > MAX_GAP:
+        return None
+    return (current[1] - previous[1]) / dt, (current[2] - previous[2]) / dt
 
 
 def twist_from_wheels(left, right, radius, separation):
@@ -52,18 +67,22 @@ class WheelTwist(Node):
         self.covariance = [0.0] * 36
         for i, value in enumerate(diagonal):
             self.covariance[7 * i] = float(value)
+        self.previous = None  # (stamp_s, left_pos, right_pos)
         self.pub = self.create_publisher(TwistWithCovarianceStamped, '/wheel/twist', 10)
         self.create_subscription(JointState, '/joint_states', self.on_joints, 10)
 
     def on_joints(self, msg):
-        """Publish the body twist if both wheels have a velocity in this message."""
-        if not msg.velocity:
+        """Publish the body twist from the wheel position change since the last message."""
+        position = dict(zip(msg.name, msg.position))
+        if not all(j in position for j in self.joints):
             return
-        velocity = dict(zip(msg.name, msg.velocity))
-        if not all(j in velocity for j in self.joints):
+        stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        current = (stamp, position[self.joints[0]], position[self.joints[1]])
+        previous, self.previous = self.previous, current
+        rates = wheel_rates(previous, current) if previous else None
+        if rates is None:
             return
-        vx, vyaw = twist_from_wheels(velocity[self.joints[0]], velocity[self.joints[1]],
-                                     self.radius, self.separation)
+        vx, vyaw = twist_from_wheels(rates[0], rates[1], self.radius, self.separation)
         out = TwistWithCovarianceStamped()
         out.header.stamp = msg.header.stamp
         out.header.frame_id = self.frame_id

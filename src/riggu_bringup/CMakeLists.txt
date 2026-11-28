@@ -14,6 +14,9 @@ install(PROGRAMS scripts/odom_check.py
 install(PROGRAMS scripts/wheel_twist.py
   DESTINATION lib/${PROJECT_NAME}
   RENAME wheel_twist)
+install(PROGRAMS scripts/imu_scale.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME imu_scale)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -29,6 +32,7 @@ if(BUILD_TESTING)
   ament_add_pytest_test(test_bringup_launch test/test_bringup_launch.py)
   ament_add_pytest_test(test_odom_check test/test_odom_check.py)
   ament_add_pytest_test(test_wheel_twist test/test_wheel_twist.py)
+  ament_add_pytest_test(test_imu_scale test/test_imu_scale.py)
 endif()
 
 ament_package()

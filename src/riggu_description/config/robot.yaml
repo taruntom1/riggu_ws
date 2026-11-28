@@ -62,6 +62,7 @@ imu:  # BNO055 (on the DriveLink board)
   pitch:             {value: 0.0,    source: estimate}
   yaw:               {value: 3.14159265, source: measured, note: "2026-11-28 tilt test: chip x points back, y right, z up"}
   rate:              {value: 100.0,  source: estimate, note: "Hz, sim only"}
+  gyro_z_scale:      {value: 1.032,  source: calibrated, note: "real only; raw yaw rate / true, 2026-11-28 floor-mark spin (integrated gyro 371.7 deg per 360). riggu_bringup/imu_scale divides by it"}
   gyro_noise_stddev:  {value: 0.0017, source: datasheet, note: "rad/s, sim only; 0.014 deg/s/sqrt(Hz) at 50 Hz bandwidth"}
   gyro_bias_stddev:   {value: 0.001,  source: estimate,  note: "rad/s, sim only"}
   accel_noise_stddev: {value: 0.010,  source: datasheet, note: "m/s^2, sim only; 150 ug/sqrt(Hz) at 50 Hz bandwidth"}

@@ -42,3 +42,13 @@ def test_matches_diff_drive_convention():
     vx, vyaw = wheel_twist.twist_from_wheels(0.0, 3.0, R, B)
     assert vx == pytest.approx(1.5 * R)
     assert vyaw == pytest.approx(3.0 * R / B)
+
+
+def test_rates_from_positions():
+    rates = wheel_twist.wheel_rates((1.0, 0.0, 0.0), (1.02, 0.04, -0.02))
+    assert rates == pytest.approx((2.0, -1.0))
+
+
+@pytest.mark.parametrize('dt', [0.0, -0.01, 0.6])
+def test_rates_skip_bad_gaps(dt):
+    assert wheel_twist.wheel_rates((1.0, 0.0, 0.0), (1.0 + dt, 0.1, 0.1)) is None

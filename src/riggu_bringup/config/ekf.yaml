@@ -1,6 +1,6 @@
 # robot_localization ekf_node: odom -> base_footprint, shared by mode:=real|sim|mock.
 # bringup.launch.py loads this file, then:
-#   use_imu_orientation:=false  -> overrides from ekf_gyro_only.yaml (no absolute yaw)
+#   use_imu_orientation:=false  -> overrides from ekf_gyro_only.yaml (no absolute yaw; the default)
 #   imu:=false                  -> drops every imu0* key (wheel odometry only)
 # Input covariances come from the sources: wheel_twist.yaml covariance_diagonal and
 # imu_sensor_broadcaster static_covariance_* (controllers.yaml).
@@ -31,9 +31,11 @@ ekf_filter_node:
                     false, false, false]
     twist0_queue_size: 10
 
-    # BNO055 (NDOF fusion): absolute yaw and vyaw. Yaw is fused relative to the first
-    # sample, so odom starts at yaw 0 instead of magnetic north.
-    imu0: /imu
+    # BNO055 (NDOF fusion) after riggu_bringup/imu_scale (gyro scale): absolute yaw and vyaw.
+    # Yaw is fused relative to the first sample, so odom starts at yaw 0, not magnetic north.
+    # The launch default use_imu_orientation:=false drops the absolute yaw: on the floor the
+    # magnetometer pulled heading 3-6 deg off on straights (2026-11-28).
+    imu0: /imu/corrected
     imu0_config: [false, false, false,
                   false, false, true,
                   false, false, false,

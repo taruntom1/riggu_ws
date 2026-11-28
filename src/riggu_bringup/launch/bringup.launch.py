@@ -30,7 +30,9 @@ robot_localization ekf_node (every mode) owns odom -> base_footprint and publish
 /odometry/filtered from /wheel/twist and /imu (config/ekf.yaml). wheel_twist turns
 /joint_states into /wheel/twist, armed or not (diff_drive_controller's /odom stops
 while it is inactive). use_imu_orientation:=false
-fuses the gyro only (config/ekf_gyro_only.yaml); imu:=false fuses wheel odometry only.
+(the default) fuses the gyro only (config/ekf_gyro_only.yaml); imu:=false fuses the wheels
+only. imu_scale corrects the BNO055 gyro scale (robot.yaml imu.gyro_z_scale, real only):
+/imu -> /imu/corrected, the EKF's IMU input.
 
 cmd_vel chain (riggu_teleop/teleop.launch.py + nav2 collision_monitor):
   /cmd_vel_joy, /cmd_vel_nav, /estop -> twist_mux -> /cmd_vel_mux -> collision_monitor
@@ -129,13 +131,26 @@ def ekf(context, use_sim_time):
                     'use_sim_time': use_sim_time}
     config = PathJoinSubstitution(
         [FindPackageShare('riggu_bringup'), 'config', 'wheel_twist.yaml'])
-    return [
-        Node(package='riggu_bringup', executable='wheel_twist', name='wheel_twist',
-             parameters=[config, wheel_params], output='screen'),
+    nodes = [Node(package='riggu_bringup', executable='wheel_twist', name='wheel_twist',
+                  parameters=[config, wheel_params], output='screen')]
+    if LaunchConfiguration('imu').perform(context) == 'true':
+        nodes.append(Node(package='riggu_bringup', executable='imu_scale', name='imu_scale',
+                          parameters=[{'gyro_z_scale': gyro_z_scale(context),
+                                       'use_sim_time': use_sim_time}],
+                          output='screen'))
+    return nodes + [
         Node(package='robot_localization', executable='ekf_node', name='ekf_filter_node',
              parameters=[ekf_params(context), {'use_sim_time': use_sim_time}],
              output='screen'),
     ]
+
+
+def gyro_z_scale(context):
+    """Return the real BNO055's gyro scale from robot.yaml; 1.0 for sim and mock."""
+    if LaunchConfiguration('mode').perform(context) != 'real':
+        return 1.0
+    with open(LaunchConfiguration('robot_config').perform(context), encoding='utf-8') as f:
+        return float(yaml.safe_load(f)['imu']['gyro_z_scale']['value'])
 
 
 def footprint(robot, margin):
@@ -264,9 +279,9 @@ def generate_launch_description():
             default_value=PathJoinSubstitution(
                 [FindPackageShare('riggu_bringup'), 'config', 'lidar.yaml']),
             description='real: sllidar_node params'),
-        DeclareLaunchArgument('use_imu_orientation', default_value='true',
+        DeclareLaunchArgument('use_imu_orientation', default_value='false',
                               choices=['true', 'false'],
-                              description='EKF: fuse IMU absolute yaw (false: gyro only)'),
+                              description='EKF: also fuse BNO055 absolute (magnetometer) yaw'),
         DeclareLaunchArgument(
             'ekf_config',
             default_value=PathJoinSubstitution(

@@ -57,3 +57,9 @@ def test_report_distance_and_missing():
     assert 'distance from start 0.500 m' in odom and 'residual  +0.57 deg' in odom
     assert 'no data' in filtered
     assert 'distance' not in imu and '+360.00 deg' in imu
+
+
+def test_gyro_scale_from_spins():
+    assert check.gyro_scale(math.radians(371.7)) == pytest.approx(371.7 / 360.0)
+    assert check.gyro_scale(math.radians(-743.0)) == pytest.approx(743.0 / 720.0)
+    assert check.gyro_scale(math.radians(10.0)) is None
