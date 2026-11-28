@@ -18,12 +18,15 @@ riggu base bring-up: robot_state_publisher, ros2_control, controller spawners.
 mode:=real|sim|mock picks the ros2_control hardware (see riggu_description).
 In sim, Gazebo runs the controller manager (gz_ros2_control), so no
 ros2_control_node is started here; riggu_gazebo/sim.launch.py includes this.
-On real, activating diff_drive_controller arms the DriveLink motors.
+
+real also starts the lidar driver and DriveLink diagnostics, and loads
+diff_drive_controller *inactive*: activating it arms the DriveLink motors, so
+that is always an explicit `ros2 control switch_controllers --activate`.
 """
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
-from launch.conditions import UnlessCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.substitutions import (Command, LaunchConfiguration, PathJoinSubstitution,
                                   PythonExpression)
 from launch_ros.actions import Node
@@ -31,9 +34,12 @@ from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 import yaml
 
+CONTROLLERS = ('joint_state_broadcaster', 'imu_sensor_broadcaster', 'diff_drive_controller')
+
 
 def drive_spawner(context, controllers, use_sim_time):
     """Spawn diff_drive_controller with wheel params and limits from robot.yaml."""
+    mode = LaunchConfiguration('mode').perform(context)
     with open(LaunchConfiguration('robot_config').perform(context), encoding='utf-8') as f:
         robot = yaml.safe_load(f)
     wheel, limits = robot['wheel'], robot['limits']
@@ -51,12 +57,15 @@ def drive_spawner(context, controllers, use_sim_time):
     }
     ros_args = ['-r ~/cmd_vel:=/cmd_vel_safe', '-r ~/odom:=/odom']
     ros_args += [f'-p {name}:={float(value)}' for name, value in params.items()]
-    return [spawner('diff_drive_controller', controllers, use_sim_time, ros_args)]
+    return [spawner('diff_drive_controller', controllers, use_sim_time, ros_args,
+                    inactive=mode == 'real')]
 
 
-def spawner(name, controllers, use_sim_time, ros_args=()):
-    """Return a spawner node for one controller."""
+def spawner(name, controllers, use_sim_time, ros_args=(), inactive=False):
+    """Return a spawner node for one controller (loaded inactive if asked)."""
     args = [name, '--param-file', controllers, '--controller-manager-timeout', '120']
+    if inactive:
+        args.append('--inactive')
     # '=' form: argparse would read a bare '-p ...' value as the spawner's own -p
     args += [f'--controller-ros-args={arg}' for arg in ros_args]
     return Node(package='controller_manager', executable='spawner', name=f'spawner_{name}',
@@ -72,6 +81,9 @@ def generate_launch_description():
     mode = LaunchConfiguration('mode')
     use_sim_time = LaunchConfiguration('use_sim_time')
     is_sim = PythonExpression(["'", mode, "' == 'sim'"])
+    is_real = PythonExpression(["'", mode, "' == 'real'"])
+    drivelink = {name: LaunchConfiguration(f'drivelink_{name}')
+                 for name in ('agent', 'device', 'token_file')}
 
     robot_description = ParameterValue(
         Command([
@@ -79,6 +91,9 @@ def generate_launch_description():
             ' mode:=', mode,
             ' robot_config:=', LaunchConfiguration('robot_config'),
             ' controllers_file:=', controllers,
+            ' drivelink_agent:=', drivelink['agent'],
+            ' drivelink_device:=', drivelink['device'],
+            ' drivelink_token_file:=', drivelink['token_file'],
         ]),
         value_type=str)
 
@@ -91,6 +106,17 @@ def generate_launch_description():
             'robot_config',
             default_value=PathJoinSubstitution([description_share, 'config', 'robot.yaml']),
             description='Dimensions file (wheel params and limits for the controller)'),
+        DeclareLaunchArgument('drivelink_agent', default_value='tcp://127.0.0.1:47620',
+                              description='real: DriveLink agent URL'),
+        DeclareLaunchArgument('drivelink_device', default_value='base',
+                              description='real: device alias in /etc/drivelink/agent.json'),
+        DeclareLaunchArgument('drivelink_token_file', default_value='/etc/drivelink/token',
+                              description='real: agent token (user in the drivelink group)'),
+        DeclareLaunchArgument(
+            'lidar_config',
+            default_value=PathJoinSubstitution(
+                [FindPackageShare('riggu_bringup'), 'config', 'lidar.yaml']),
+            description='real: sllidar_node params'),
 
         Node(package='robot_state_publisher', executable='robot_state_publisher',
              parameters=[{'robot_description': robot_description,
@@ -103,6 +129,19 @@ def generate_launch_description():
              remappings=[('~/robot_description', '/robot_description')],
              condition=UnlessCondition(is_sim),
              output='screen'),
+
+        # real only: RPLIDAR C1 and DriveLink /diagnostics + ack_fault/recover services.
+        # recover re-activates diff_drive_controller, i.e. it arms the motors.
+        Node(package='sllidar_ros2', executable='sllidar_node', name='sllidar_node',
+             parameters=[LaunchConfiguration('lidar_config')],
+             respawn=True, respawn_delay=2.0,
+             condition=IfCondition(is_real), output='screen'),
+        Node(package='drivelink_bringup', executable='diagnostics',
+             parameters=[{name: ParameterValue(value, value_type=str)
+                          for name, value in drivelink.items()},
+                         {'hardware': 'drivelink',
+                          'recovery_controllers': list(CONTROLLERS)}],
+             condition=IfCondition(is_real), output='screen'),
 
         spawner('joint_state_broadcaster', controllers, use_sim_time),
         spawner('imu_sensor_broadcaster', controllers, use_sim_time, ['-r ~/imu:=/imu']),

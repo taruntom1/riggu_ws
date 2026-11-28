@@ -1,0 +1,13 @@
+# RPLIDAR C1 via Slamtec sllidar_ros2 (riggu.repos), mode:=real only.
+# Values from sllidar_ros2 launch/sllidar_c1_launch.py; /dev/rplidar from config/udev/99-riggu.rules.
+# Scan orientation is the laser frame's yaw in riggu_description/config/robot.yaml (lidar.yaw),
+# not `inverted` here.
+sllidar_node:
+  ros__parameters:
+    channel_type: serial
+    serial_port: /dev/rplidar
+    serial_baudrate: 460800
+    frame_id: laser
+    inverted: false
+    angle_compensate: true
+    scan_mode: Standard

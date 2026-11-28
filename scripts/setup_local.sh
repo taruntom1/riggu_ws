@@ -8,19 +8,23 @@ set -euo pipefail
 
 usage() {
   cat <<EOF
-Usage: $0 --profile robot|dev [--no-tailscale]
+Usage: $0 --profile robot|dev [--no-tailscale] [--drivelink-port PATH]
 
-  --profile P     robot (Pi, no Gazebo) or dev (desktop-full + Gazebo Harmonic)
-  --no-tailscale  robot: skip installing Tailscale
+  --profile P            robot (Pi, no Gazebo) or dev (desktop-full + Gazebo Harmonic)
+  --no-tailscale         robot: skip installing Tailscale
+  --drivelink-port PATH  robot: DriveLink serial port for /etc/drivelink/agent.json
+                         (default: the only /dev/drivelink/* entry)
 EOF
 }
 
 PROFILE=""
 TAILSCALE=1
+DRIVELINK_PORT=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --profile) PROFILE=${2:?}; shift 2 ;;
     --no-tailscale) TAILSCALE=0; shift ;;
+    --drivelink-port) DRIVELINK_PORT=${2:?}; shift 2 ;;
     -h | --help) usage; exit 0 ;;
     *) usage >&2; exit 2 ;;
   esac
@@ -125,6 +129,30 @@ if [[ $PROFILE == robot ]]; then
     sudo udevadm trigger --subsystem-match=tty
   fi
 
+  log "DriveLink agent (/etc/drivelink/agent.json)"
+  if [[ -z $DRIVELINK_PORT ]]; then
+    shopt -s nullglob
+    ports=(/dev/drivelink/*)
+    shopt -u nullglob
+    [[ ${#ports[@]} == 1 ]] && DRIVELINK_PORT=${ports[0]}
+  fi
+  if [[ -z $DRIVELINK_PORT ]]; then
+    echo "skipped: no single /dev/drivelink/* port; plug in the board or pass --drivelink-port"
+  else
+    tmp=$(mktemp)
+    sed "s|@PORT@|$DRIVELINK_PORT|" "$WS/config/drivelink/agent.json" >"$tmp"
+    if ! cmp -s "$tmp" /etc/drivelink/agent.json; then
+      [[ -f /etc/drivelink/agent.json ]] && sudo cp /etc/drivelink/agent.json /etc/drivelink/agent.json.bak
+      sudo install -m 0644 "$tmp" /etc/drivelink/agent.json
+      if has_systemd; then
+        echo "restarting drivelink-agent (this disarms the board)"
+        sudo systemctl restart drivelink-agent.service
+      fi
+    fi
+    rm -f "$tmp"
+    echo "device base -> serial://$DRIVELINK_PORT, bind 0.0.0.0:47620"
+  fi
+
   log "Groups"
   for g in dialout drivelink input bluetooth; do
     if getent group "$g" >/dev/null && ! id -nG "$USER" | tr ' ' '\n' | grep -qx "$g"; then
@@ -140,7 +168,7 @@ if [[ $PROFILE == robot ]]; then
   done
   if has_systemd; then
     sudo systemctl daemon-reload
-    sudo systemctl enable --now rmw-zenohd.service chrony avahi-daemon bluetooth
+    sudo systemctl enable --now rmw-zenohd.service drivelink-agent.service chrony avahi-daemon bluetooth
   else
     echo "systemd not running; units installed but not enabled"
   fi

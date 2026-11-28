@@ -27,3 +27,7 @@ docker/compose.override.yaml
 
 # Source deps imported from riggu.repos
 src/external/
+
+# Core dumps (e.g. from a crashed node in the container)
+core
+core.[0-9]*

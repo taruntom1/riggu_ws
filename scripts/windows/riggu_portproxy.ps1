@@ -7,6 +7,7 @@
   Docker cannot reach 192.168.137.0/24 directly. This adds netsh portproxy rules:
     127.0.0.1:2222  -> <pi>:22    (SSH)
     127.0.0.1:17447 -> <pi>:7447  (rmw_zenoh router)
+    127.0.0.1:47620 -> <pi>:47620 (DriveLink agent, for the DriveLink desktop app)
   Non-default local ports avoid clashing with a local zenoh router in WSL.
   Run as Administrator. Re-run if the Pi's hotspot IP changes.
 
@@ -22,7 +23,8 @@ $ErrorActionPreference = "Stop"
 
 $rules = @(
   @{ Listen = 2222;  Target = 22 },
-  @{ Listen = 17447; Target = 7447 }
+  @{ Listen = 17447; Target = 7447 },
+  @{ Listen = 47620; Target = 47620 }
 )
 
 $principal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
