@@ -35,7 +35,7 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args \
 
 ## Real robot
 
-`mode:=real` loads `diff_drive_controller` inactive: the board stays disarmed until you activate it. Activating arms the motors; `/drivelink_diagnostics/recover` re-activates it too.
+`mode:=real` loads `diff_drive_controller` inactive: the board stays disarmed until you activate it. Activating arms the motors. After a DriveLink link loss the hardware goes `unconfigured`; `/drivelink_diagnostics/recover` (or `ros2 control set_hardware_component_state drivelink active`) restores it and the broadcasters, still disarmed.
 
 ```bash
 # Pi (source scripts/env.sh robot)
@@ -44,6 +44,7 @@ ros2 control switch_controllers --activate diff_drive_controller --strict    # A
 ros2 control switch_controllers --deactivate diff_drive_controller --strict  # disarms
 ros2 topic echo /diagnostics --once        # online, lease holder, arm state, faults
 ros2 service call /drivelink_diagnostics/ack_fault std_srvs/srv/Trigger '{}'
+ros2 service call /drivelink_diagnostics/recover std_srvs/srv/Trigger '{}'  # after a link loss; stays disarmed
 
 # Laptop, in the container (source scripts/env.sh remote)
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args \
@@ -52,6 +53,6 @@ rviz2 -d "$(ros2 pkg prefix riggu_gazebo)/share/riggu_gazebo/rviz/sim.rviz"
 ```
 
 **Calibration** (wheels on the floor, slow teleop, `wheel.radius` first):
-1. `calibrate_wheels straight 2.0`: Enter, drive straight to a tape-measured 2 m mark, Enter.
-2. `calibrate_wheels turns 10`: Enter, 10 full turns in place against a floor mark, Enter.
-3. Write the printed values to `riggu_description/config/robot.yaml` (`source: calibrated`, date in `note`), rebuild, restart bringup, repeat both: the odometry error must be under 2 %.
+1. `calibrate_wheels straight 2.0`: Enter, drive straight to a tape-measured 2 m mark, Enter. Write `wheel.radius` to `riggu_description/config/robot.yaml` (`source: calibrated`, date in `note`) before step 2: the turns result uses it.
+2. `calibrate_wheels turns 10`: Enter, 10 full turns in place against a floor mark, Enter. Write `wheel.separation`.
+3. Restart bringup (it reads `robot.yaml` at launch) and repeat both: the odometry error must be under 2 %. 2026-11-28: radius 0.06374 m, separation 0.3853 m → 1 % straight, 0.2 % turns.

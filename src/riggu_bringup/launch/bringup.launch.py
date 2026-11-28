@@ -79,10 +79,9 @@ def launch_setup(context, controllers, use_sim_time):
         nodes.append(spawner('imu_sensor_broadcaster', controllers, use_sim_time,
                              ['-r ~/imu:=/imu']))
     if mode == 'real':
-        # /diagnostics + ack_fault/recover; recover re-activates the drive, i.e. arms it.
-        recovery = ['joint_state_broadcaster', 'diff_drive_controller']
-        if imu:
-            recovery.insert(1, 'imu_sensor_broadcaster')
+        # /diagnostics + ack_fault/recover. recover restores the hardware and the
+        # broadcasters only: like launch, it never re-activates (arms) the drive.
+        recovery = ['joint_state_broadcaster'] + (['imu_sensor_broadcaster'] if imu else [])
         drivelink = {n: LaunchConfiguration(f'drivelink_{n}').perform(context)
                      for n in DRIVELINK_ARGS}
         nodes.append(Node(package='drivelink_bringup', executable='diagnostics',

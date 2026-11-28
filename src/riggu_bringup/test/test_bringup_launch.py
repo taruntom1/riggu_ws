@@ -22,6 +22,7 @@ from xml.dom import minidom
 from launch import LaunchContext
 from launch.substitutions import TextSubstitution
 import pytest
+import yaml
 
 PKG = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('bringup', PKG / 'launch' / 'bringup.launch.py')
@@ -84,3 +85,23 @@ def test_real_maps_board_controller_labels():
     instances = [p.firstChild.data for p in doc.getElementsByTagName('param')
                  if p.getAttribute('name') == 'instance']
     assert instances == ['pid_left', 'pid_right']
+
+
+@pytest.mark.parametrize('imu,expected', [
+    ('true', ['joint_state_broadcaster', 'imu_sensor_broadcaster']),
+    ('false', ['joint_state_broadcaster'])])
+def test_recover_never_arms(imu, expected):
+    context = LaunchContext()
+    context.launch_configurations.update({
+        'mode': 'real', 'imu': imu, 'robot_config': str(ROBOT_YAML),
+        'drivelink_agent': 'tcp://127.0.0.1:47620', 'drivelink_device': 'base',
+        'drivelink_token_file': '/etc/drivelink/token',
+        'drivelink_left_label': 'pid_left', 'drivelink_right_label': 'pid_right'})
+    nodes = bringup.launch_setup(context, TextSubstitution(text='controllers.yaml'), 'false')
+    (diagnostics,) = [n for n in nodes if n.node_executable == 'diagnostics']
+    # launch_ros normalises keys to substitution tuples, list items to YAML substitutions
+    params = {''.join(s.perform(context) for s in k): v
+              for d in diagnostics._Node__parameters for k, v in d.items()}
+    recovery = [yaml.safe_load(''.join(s.perform(context) for s in item))
+                for item in params['recovery_controllers']]
+    assert recovery == expected

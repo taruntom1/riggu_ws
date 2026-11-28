@@ -99,7 +99,7 @@ Tasks
 - Hardware checks (in this order):
   1. Wheel direction and encoder polarity, open loop in the DriveLink app first.
   2. Velocity-mode PID response.
-  3. IMU axes against the URDF.
+  3. IMU axes against the URDF. *Deferred: the BNO055 isn't fitted yet; `bringup.launch.py imu:=false` until it is. Done when the IMU is fitted, before Phase 6.*
   4. Lidar orientation against the URDF.
 - Calibrate wheel radius (2 m straight run) and separation (10 in-place turns) with `ros2 run riggu_bringup calibrate_wheels`; write the values back to `riggu_description/config/robot.yaml` (`source: calibrated`).
 - Correct the sensor poses in `robot.yaml` from checks 3–4 (`source: measured`).
@@ -188,4 +188,5 @@ Tasks
 | BNO055 yaw disturbed by motor magnets | Phase 6 interference test; one-flag fallback to gyro-only |
 | Robot reachability and isolation | Tailscale share from a dedicated tailnet (Pi can't reach sharees). Offline fallback: hotspot + Windows `netsh portproxy`; re-run it if the Pi's hotspot IP changes |
 | Clock skew between Pi and laptop breaking RViz TF | chrony on the Pi; the laptop only visualises |
+| USB drops under motor load (2026-11-28: C1 port "disabled by hub (EMI?)", DriveLink CH343 re-enumerated) | Short shielded cables / ferrites, motor power wiring away from USB; sllidar respawns and `/dev/rplidar` follows; DriveLink link loss → hardware `unconfigured`, `recover` restores it disarmed |
 | Pi 5 CPU under SLAM + Nav2 | MPPI batch and rate tuning, costmap update rates, Phase 8 profiling |
