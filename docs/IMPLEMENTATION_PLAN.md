@@ -11,7 +11,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Each phase is one feature branc
 | Dev environment | Docker Engine inside WSL (docker-ce + nvidia-container-toolkit), RTX 4050 via WSLg; VS Code devcontainer on the same image |
 | Pi deploy | Push → `scripts/deploy.sh` on the Pi (pull, rosdep, colcon build, restart services) |
 | Pi access | Key-based SSH from this WSL machine to `riggu.local` |
-| Pi address | **Primary: Tailscale.** The Pi (hostname and user `riggu`) is the only machine in a dedicated riggu tailnet, tagged `tag:robot`. It is *shared* to each person, and shared machines can't initiate connections into the recipient's tailnet. The policy is `config/tailscale/riggu-policy.hujson`. Each dev's `~/.ssh/config` maps `riggu.local` to the Pi's riggu-tailnet MagicDNS name. **Fallback (no internet):** the Pi is on the laptop's Windows hotspot; `scripts/windows/riggu_portproxy.ps1` forwards `127.0.0.1:2222 → Pi:22` and `127.0.0.1:17447 → Pi:7447`; SSH alias `riggu-local`. Env: `RIGGU_HOST` (SSH host, default `riggu.local`), `RIGGU_ZENOH_ENDPOINT` (default `tcp/<HostName of RIGGU_HOST from ssh -G>:7447`) |
+| Pi address | **Primary: Tailscale.** The Pi (hostname and user `riggu`) is the only machine in a dedicated riggu tailnet, tagged `tag:robot`. It is *shared* to each person, and shared machines can't initiate connections into the recipient's tailnet. The policy is `config/tailscale/riggu-policy.hujson`. Each dev's `~/.ssh/config` maps `riggu.local` to the Pi's riggu-tailnet MagicDNS name. **Fallback (no internet):** the Pi is on the laptop's Windows hotspot; `scripts/windows/riggu_portproxy.ps1` forwards `127.0.0.1:2222 → Pi:22`, `127.0.0.1:17447 → Pi:7447` and `127.0.0.1:47620 → Pi:47620`; SSH alias `riggu-local`. Env: `RIGGU_HOST` (SSH host, default `riggu.local`), `RIGGU_ZENOH_ENDPOINT` (default `tcp/<HostName of RIGGU_HOST from ssh -G>:7447`) |
 | Order | Interleaved: every capability is brought up in sim, then on the real robot, before moving on |
 
 ## Cross-cutting conventions
@@ -94,14 +94,14 @@ Done when: keyboard teleop drives the robot in Gazebo, `/scan`, `/imu`, and `/od
 ## Phase 4 — Real base bring-up
 
 Tasks
-- Run `setup_local.sh --profile robot` on the Pi over SSH. Configure the DriveLink agent: alias `base`, USB endpoint, and bind it so tailnet users can reach port 47620 (the policy already allows it). Start the zenoh router service.
-- `bringup.launch.py mode:=real` on the Pi: robot_state_publisher, `ros2_control_node` with the DriveLink plugin, spawners, lidar driver (`sllidar_ros2`) on `/dev/rplidar`.
+- Run `setup_local.sh --profile robot` on the Pi over SSH. It installs `/etc/drivelink/agent.json` from `config/drivelink/agent.json`: alias `base`, USB endpoint, bind `0.0.0.0:47620` (token-protected; the tailnet policy allows it, and the hotspot portproxy forwards it). Start the zenoh router service.
+- `bringup.launch.py mode:=real` on the Pi: robot_state_publisher, `ros2_control_node` with the DriveLink plugin, spawners, lidar driver (`sllidar_ros2`) on `/dev/rplidar`, DriveLink `diagnostics` (fault ack/recover). `diff_drive_controller` is loaded **inactive**; arming is an explicit `ros2 control switch_controllers --activate`.
 - Hardware checks (in this order):
   1. Wheel direction and encoder polarity, open loop in the DriveLink app first.
   2. Velocity-mode PID response.
   3. IMU axes against the URDF.
   4. Lidar orientation against the URDF.
-- Calibrate wheel radius (2 m straight run) and separation (10 in-place turns); write the values back to `riggu_description/config/robot.yaml` (`source: calibrated`).
+- Calibrate wheel radius (2 m straight run) and separation (10 in-place turns) with `ros2 run riggu_bringup calibrate_wheels`; write the values back to `riggu_description/config/robot.yaml` (`source: calibrated`).
 - Correct the sensor poses in `robot.yaml` from checks 3–4 (`source: measured`).
 - Laptop: `source scripts/env.sh remote` → RViz over zenoh.
 

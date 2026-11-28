@@ -7,4 +7,5 @@
   - Only add a json5 file if an override string can't express the change; then copy the installed default and edit it.
 - **Pi address:** primary is Tailscale. The fallback uses the Windows hotspot port-forward, so don't bind local port 17447 or 2222 in WSL.
 - **`tailscale/riggu-policy.hujson`:** the robot tailnet policy. Only people → `tag:robot` on 22, 7447, 47620 and ICMP; nothing from the robot. Changing it is a security decision, so ask the user.
+- **`drivelink/agent.json`:** template only; `@PORT@` is filled on the Pi. The token stays in `/etc/drivelink/token` and never enters the repo. Changing it means a `drivelink-agent` restart, which disarms the board.
 - **`udev/`:** stable device names. `/dev/rplidar` is the C1's CP210x adapter. DriveLink's own packaging provides `/dev/drivelink/<serial>`; don't duplicate it.
