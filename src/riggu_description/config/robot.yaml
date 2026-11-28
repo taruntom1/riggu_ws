@@ -58,9 +58,9 @@ imu:  # BNO055 (on the DriveLink board)
   x_from_axle:       {value: -0.155, source: measured, note: "2026-11-28, chip centre behind the axle"}
   y_from_centreline: {value: 0.100,  source: measured, note: "2026-11-28, left of the centreline (+y)"}
   z_above_floor:     {value: 0.060,  source: estimate}
-  roll:              {value: 0.0,    source: estimate, note: "chip axes vs base_link (REP-103: x fwd, y left, z up)"}
+  roll:              {value: 0.0,    source: estimate, note: "chip axes vs base_link (REP-103: x fwd, y left, z up); ~5 deg roll and pitch seen at rest 2026-11-28 (mount or floor), ignored in 2D"}
   pitch:             {value: 0.0,    source: estimate}
-  yaw:               {value: 0.0,    source: estimate}
+  yaw:               {value: 3.14159265, source: measured, note: "2026-11-28 tilt test: chip x points back, y right, z up"}
   rate:              {value: 100.0,  source: estimate, note: "Hz, sim only"}
   gyro_noise_stddev:  {value: 0.0017, source: datasheet, note: "rad/s, sim only; 0.014 deg/s/sqrt(Hz) at 50 Hz bandwidth"}
   gyro_bias_stddev:   {value: 0.001,  source: estimate,  note: "rad/s, sim only"}

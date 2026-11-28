@@ -19,9 +19,10 @@ imu_sensor_broadcaster:
   ros__parameters:
     sensor_name: imu
     frame_id: imu_link
-    # Row-major 3x3, diagonal only. Estimates for the BNO055; tune in Phase 6.
+    # Row-major 3x3, diagonal only. Gyro: measured at rest 2026-11-28 (sigma 0.0005 rad/s),
+    # x2 margin for motor vibration. Orientation: BNO055 NDOF heading (~2 deg).
     static_covariance_orientation: [1.0e-3, 0.0, 0.0, 0.0, 1.0e-3, 0.0, 0.0, 0.0, 1.0e-3]
-    static_covariance_angular_velocity: [1.0e-5, 0.0, 0.0, 0.0, 1.0e-5, 0.0, 0.0, 0.0, 1.0e-5]
+    static_covariance_angular_velocity: [1.0e-6, 0.0, 0.0, 0.0, 1.0e-6, 0.0, 0.0, 0.0, 1.0e-6]
     static_covariance_linear_acceleration: [1.0e-3, 0.0, 0.0, 0.0, 1.0e-3, 0.0, 0.0, 0.0, 1.0e-3]
 
 diff_drive_controller:
