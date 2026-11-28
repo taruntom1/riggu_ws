@@ -64,7 +64,9 @@ if ! grep -rqs '^deb.*universe\|^Components:.*universe' /etc/apt/sources.list /e
   sudo add-apt-repository -y universe
 fi
 
-if ! dpkg -s ros2-apt-source &>/dev/null; then
+# An existing ROS source (ros2-apt-source, or an older hand-made ros2.list) is kept.
+if ! dpkg -s ros2-apt-source &>/dev/null &&
+  ! grep -rqs 'packages.ros.org/ros2' /etc/apt/sources.list /etc/apt/sources.list.d/; then
   ver=$(curl -fsSL https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest |
     sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p')
   [[ -n $ver ]] || die "could not look up the ros2-apt-source release"
