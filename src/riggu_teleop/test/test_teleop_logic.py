@@ -29,7 +29,8 @@ def load(name):
 
 
 EdgeToggle = load('stop_latch').EdgeToggle
-ArmCombo = load('arm_switch').ArmCombo
+arm_switch = load('arm_switch')
+ArmCombo = arm_switch.ArmCombo
 
 
 def test_latch_toggles_on_press_only():
@@ -75,3 +76,13 @@ def test_disarm_on_press_and_blocks_arm():
     assert combo.update(buttons(4, 8, 9), 2.0) is None  # disarm held: never arms
     assert combo.update(buttons(), 2.1) is None
     assert combo.update(buttons(4, 9, 8), 2.2) == 'disarm'
+
+
+def test_inactive_hardware():
+    from types import SimpleNamespace as NS
+
+    def comp(name, label):
+        return NS(name=name, state=NS(label=label))
+    assert arm_switch.inactive_hardware([comp('drivelink', 'active')]) == []
+    assert arm_switch.inactive_hardware(
+        [comp('drivelink', 'unconfigured'), comp('other', 'active')]) == ['drivelink']

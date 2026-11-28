@@ -8,7 +8,7 @@ Manual override with a generic Bluetooth gamepad on the Pi: pad teleop, `twist_m
 | `config/joy_generic.yaml` | Every button/axis index, deadman, normal/turbo scales, stop button, arm combo |
 | `config/twist_mux.yaml` | Inputs: joy (100, 0.25 s), nav (10, 0.5 s). Lock: `/estop` (255, 0.5 s heartbeat) |
 | `riggu_teleop/stop_latch.py` | Stop button toggles `/estop` (`std_msgs/Bool`, 10 Hz heartbeat). `~/set` (`std_srvs/SetBool`) latches/releases without the pad |
-| `riggu_teleop/arm_switch.py` | Hold `arm_buttons` for `arm_hold` s → activate `diff_drive_controller` (**arms**); `disarm_button` → deactivate |
+| `riggu_teleop/arm_switch.py` | Hold `arm_buttons` for `arm_hold` s → activate `diff_drive_controller` (**arms**); `disarm_button` → deactivate. Hardware not active (DriveLink link loss) → `recover_service` (`/drivelink_diagnostics/recover`) first, then arm |
 | `test/` | Button logic (latch, arm combo); safety semantics in the configs |
 
 **Default pad mapping** (riggu's USB pad: PlayStation shape, enumerates as an Xbox 360 pad, `xpad`)
@@ -24,7 +24,7 @@ Manual override with a generic Bluetooth gamepad on the Pi: pad teleop, `twist_m
 **Behaviour**
 - Motion only while a deadman is held; the joystick always beats `/cmd_vel_nav`.
 - Stop latch: twist_mux output is zero (joy and nav) until pressed again. If `stop_latch` dies, the missing heartbeat engages the lock.
-- Boot comes up disarmed. Arming needs the combo held; the launch files never arm.
+- Boot comes up disarmed. Arming needs the combo held; the launch files never arm. After a DriveLink link loss the same combo recovers the hardware, then arms: no laptop needed.
 - Link loss: pad off → `joy_node` stops → `teleop_twist_joy` stops → twist_mux joy timeout (0.25 s) → `cmd_vel_timeout` (0.5 s) brakes → DriveLink watchdog (200 ms) if the Pi side dies.
 
 ```bash

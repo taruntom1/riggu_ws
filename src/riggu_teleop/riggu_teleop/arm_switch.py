@@ -19,14 +19,25 @@ Arm and disarm the drive from the pad.
 Holding every `arm_buttons` for `arm_hold` s activates `controller` (on the real robot
 this arms the DriveLink motors); `disarm_button` deactivates it at once. Bring-up never
 arms by itself: this is the deliberate human action that does.
+
+If a hardware component is not active when the combo fires (DriveLink link loss leaves it
+unconfigured), `recover_service` (std_srvs/Trigger, drivelink_diagnostics) is called
+first: it restores the hardware and broadcasters disarmed, then the drive is activated.
+No recover service (sim, mock): the switch is tried as is.
 """
 
 from builtin_interfaces.msg import Duration
-from controller_manager_msgs.srv import SwitchController
+from controller_manager_msgs.srv import ListHardwareComponents, SwitchController
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from sensor_msgs.msg import Joy
+from std_srvs.srv import Trigger
+
+
+def inactive_hardware(components):
+    """Names of hardware components (ListHardwareComponents) that are not active."""
+    return [c.name for c in components if c.state.label != 'active']
 
 
 class ArmCombo:
@@ -73,7 +84,12 @@ class ArmSwitch(Node):
             self.declare_parameter('arm_hold', 1.0).value,
             self.declare_parameter('disarm_button', 8).value)
         self.controller = self.declare_parameter('controller', 'diff_drive_controller').value
+        recover = self.declare_parameter(
+            'recover_service', '/drivelink_diagnostics/recover').value
         self.client = self.create_client(SwitchController, 'controller_manager/switch_controller')
+        self.hardware = self.create_client(
+            ListHardwareComponents, 'controller_manager/list_hardware_components')
+        self.recover = self.create_client(Trigger, recover) if recover else None
         self.create_subscription(Joy, 'joy', self.on_joy, 10)
 
     def on_joy(self, msg):
@@ -84,8 +100,39 @@ class ArmSwitch(Node):
                 throttle_duration_sec=10.0)
             return
         action = self.combo.update(msg.buttons, self.get_clock().now().nanoseconds * 1e-9)
-        if action:
+        if action == 'arm':
+            self.arm()
+        elif action:
             self.switch(action)
+
+    def arm(self):
+        """Arm; recover the hardware first if it is not active and recovery exists."""
+        if not (self.recover and self.recover.service_is_ready()
+                and self.hardware.service_is_ready()):
+            self.switch('arm')
+            return
+        future = self.hardware.call_async(ListHardwareComponents.Request())
+        future.add_done_callback(self.check_hardware)
+
+    def check_hardware(self, future):
+        """Call recover for inactive hardware, else arm."""
+        result = future.result()
+        down = inactive_hardware(result.component) if result is not None else []
+        if not down:
+            self.switch('arm')
+            return
+        self.get_logger().warn(f'hardware {down} not active: recovering (stays disarmed)')
+        self.recover.call_async(Trigger.Request()).add_done_callback(self.recovered)
+
+    def recovered(self, future):
+        """Arm after a successful recovery."""
+        result = future.result()
+        if result is not None and result.success:
+            self.get_logger().info(f'recovered: {result.message}')
+            self.switch('arm')
+        else:
+            detail = result.message if result is not None else future.exception()
+            self.get_logger().error(f'recover failed, not arming: {detail}')
 
     def switch(self, action):
         """Activate (arm) or deactivate (disarm) the drive controller."""
