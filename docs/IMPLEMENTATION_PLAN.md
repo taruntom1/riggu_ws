@@ -114,7 +114,7 @@ Tasks
 - `joy` + `teleop_twist_joy` (deadman button, normal/turbo scale) → `/cmd_vel_joy`.
 - `twist_mux`: joy (priority 100) > nav (10). The lock topic `/estop` (priority 255) zeroes output; it is a heartbeat, so a dead stop latch also locks.
 - `riggu_teleop/stop_latch.py`: a stop button toggles `/estop` latched until it is pressed again.
-- `riggu_teleop/arm_switch.py`: boot stays disarmed; holding deadman + Options for 1 s activates `diff_drive_controller` (arms), Share deactivates it.
+- `riggu_teleop/arm_switch.py`: boot stays disarmed; holding deadman (LB) + Start for 1 s activates `diff_drive_controller` (arms), Back deactivates it.
 - Chain: `twist_mux → collision_monitor → diff_drive_controller`. The collision monitor is added here so teleop is protected too: one footprint `approach` polygon from `robot.yaml` (Phase 8 tunes stop/slowdown zones). `collision_check_joy:=false` moves it onto the nav input only.
 - Loss-of-link layering: joy timeout → twist_mux timeout → `cmd_vel_timeout` → DriveLink watchdog (200 ms).
 - `riggu-base.service` (systemd) on the Pi: base bringup + teleop on boot, after the zenoh router and drivelink-agent.

@@ -41,7 +41,7 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args \
 
 ## Real robot
 
-`mode:=real` loads `diff_drive_controller` inactive: the board stays disarmed until you activate it, from the pad (L1 + Options for 1 s; Share disarms, see `riggu_teleop`) or with `switch_controllers`. Activating arms the motors. After a DriveLink link loss the hardware goes `unconfigured`; `/drivelink_diagnostics/recover` (or `ros2 control set_hardware_component_state drivelink active`) restores it and the broadcasters, still disarmed.
+`mode:=real` loads `diff_drive_controller` inactive: the board stays disarmed until you activate it, from the pad (LB + Start for 1 s; Back disarms, see `riggu_teleop`) or with `switch_controllers`. Activating arms the motors. After a DriveLink link loss the hardware goes `unconfigured`; `/drivelink_diagnostics/recover` (or `ros2 control set_hardware_component_state drivelink active`) restores it and the broadcasters, still disarmed.
 
 ```bash
 # Pi (source scripts/env.sh robot). On boot riggu-base.service runs the bringup:

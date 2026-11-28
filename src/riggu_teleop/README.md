@@ -11,15 +11,15 @@ Manual override with a generic Bluetooth gamepad on the Pi: pad teleop, `twist_m
 | `riggu_teleop/arm_switch.py` | Hold `arm_buttons` for `arm_hold` s → activate `diff_drive_controller` (**arms**); `disarm_button` → deactivate |
 | `test/` | Button logic (latch, arm combo); safety semantics in the configs |
 
-**Default pad mapping** (PlayStation style, Linux evdev order; check yours, see below)
+**Default pad mapping** (riggu's USB pad: PlayStation shape, enumerates as an Xbox 360 pad, `xpad`)
 
 | Control | Action |
 |---|---|
-| L1 (held) | Deadman: left stick drives (0.2 m/s, 1.0 rad/s) |
-| R1 (held) | Turbo deadman (0.5 m/s, 2.0 rad/s) |
-| L1 + Options, 1 s | Arm (real robot) |
-| Share | Disarm |
-| Circle | Stop latch on/off |
+| LB / L1 (held) | Deadman: left stick drives (0.2 m/s, 1.0 rad/s) |
+| RB / R1 (held) | Turbo deadman (0.5 m/s, 2.0 rad/s) |
+| LB + Start, 1 s | Arm (real robot) |
+| Back / Select | Disarm |
+| B | Stop latch on/off |
 
 **Behaviour**
 - Motion only while a deadman is held; the joystick always beats `/cmd_vel_nav`.
@@ -32,14 +32,16 @@ ros2 service call /stop_latch/set std_srvs/srv/SetBool '{data: true}'   # latch 
 ros2 topic echo /estop --once
 ```
 
-## Pairing a pad on the Pi
+## Bluetooth pad on the Pi
+
+A USB pad needs nothing: plug it in, `joy_node` opens `/dev/input/js0` (user in `input`). For Bluetooth:
 
 ```bash
 bluetoothctl
   power on
   agent on
   default-agent
-  scan on            # pad in pairing mode (PS style: hold Share + PS until it flashes fast)
+  scan on            # pad in pairing mode
   pair XX:XX:XX:XX:XX:XX
   trust XX:XX:XX:XX:XX:XX   # reconnects on its own after a reboot
   connect XX:XX:XX:XX:XX:XX
@@ -51,6 +53,6 @@ Cheap clones that pair but never create an input device may need `ClassicBondedO
 
 ## Mapping a new pad
 
-1. Keep the robot disarmed (press Share, or check `ros2 control list_controllers`). `riggu-base` already runs `joy_node`; without it, `ros2 run joy joy_node`.
+1. Keep the robot disarmed (press the disarm button, or check `ros2 control list_controllers`). `riggu-base` already runs `joy_node`; without it, `ros2 run joy joy_node`.
 2. `ros2 topic echo /joy` and press each control: note the index that changes in `buttons[]` / `axes[]`. Stick up and stick left must read `+1`; otherwise negate the scale.
 3. Write the indices into `config/joy_generic.yaml` (`teleop_twist_joy_node`, `stop_latch`, `arm_switch`), rebuild, `sudo systemctl restart riggu-base`.
