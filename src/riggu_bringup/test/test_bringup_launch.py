@@ -55,7 +55,8 @@ def description(mode, imu):
     context.launch_configurations.update({
         'mode': mode, 'imu': imu, 'robot_config': str(ROBOT_YAML),
         'drivelink_agent': 'tcp://127.0.0.1:47620', 'drivelink_device': 'base',
-        'drivelink_token_file': '/etc/drivelink/token'})
+        'drivelink_token_file': '/etc/drivelink/token',
+        'drivelink_left_label': 'pid_left', 'drivelink_right_label': 'pid_right'})
     return minidom.parseString(
         bringup.robot_description(context, TextSubstitution(text='controllers.yaml')))
 
@@ -76,3 +77,10 @@ def test_imu_optional(mode):
     # the imu_link frame stays in the model
     assert 'imu_link' in [link.getAttribute('name')
                           for link in without.getElementsByTagName('link')]
+
+
+def test_real_maps_board_controller_labels():
+    doc = description('real', 'false')
+    instances = [p.firstChild.data for p in doc.getElementsByTagName('param')
+                 if p.getAttribute('name') == 'instance']
+    assert instances == ['pid_left', 'pid_right']

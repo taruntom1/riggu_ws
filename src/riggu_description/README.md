@@ -14,7 +14,7 @@ URDF/xacro model of riggu, generated from one dimensions file.
 | `launch/display.launch.py` | robot_state_publisher, joint_state_publisher_gui, RViz |
 | `test/test_urdf.py` | xacro per mode, `check_urdf`, interfaces, frames, YAML schema, geometry fit |
 
-**xacro args:** `mode:=real|sim|mock` (default `mock`) · `robot_config:=<yaml>` · `controllers_file:=<yaml>` (sim: gz_ros2_control params) · `drivelink_agent` (`tcp://127.0.0.1:47620`), `drivelink_device` (`base`), `drivelink_token_file` (`/etc/drivelink/token`), `drivelink_token`, `drivelink_{left,right,imu}_label` (`left`, `right`, `imu`).
+**xacro args:** `mode:=real|sim|mock` (default `mock`) · `robot_config:=<yaml>` · `controllers_file:=<yaml>` (sim: gz_ros2_control params) · `drivelink_agent` (`tcp://127.0.0.1:47620`), `drivelink_device` (`base`), `drivelink_token_file` (`/etc/drivelink/token`), `drivelink_token`, `drivelink_{left,right,imu}_label` (`pid_left`, `pid_right`, `imu`: the board's **controller** instance labels).
 
 **Frames:** `base_footprint` (floor) → `base_link` (axle midpoint, `wheel.radius` up) → `left_wheel`, `right_wheel`, `caster`, `laser` (optical plane, x = scan 0°), `imu_link`.
 

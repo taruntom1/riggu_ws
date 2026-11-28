@@ -38,6 +38,7 @@ import xacro
 import yaml
 
 DRIVELINK_ARGS = ('agent', 'device', 'token_file')
+DRIVELINK_LABELS = ('left_label', 'right_label')
 
 
 def strip_imu(doc):
@@ -55,7 +56,8 @@ def robot_description(context, controllers):
         return LaunchConfiguration(name).perform(context)
     mappings = {'mode': arg('mode'), 'robot_config': arg('robot_config'),
                 'controllers_file': controllers.perform(context)}
-    mappings.update({f'drivelink_{n}': arg(f'drivelink_{n}') for n in DRIVELINK_ARGS})
+    mappings.update({f'drivelink_{n}': arg(f'drivelink_{n}')
+                     for n in DRIVELINK_ARGS + DRIVELINK_LABELS})
     xacro_file = PathJoinSubstitution(
         [FindPackageShare('riggu_description'), 'urdf', 'riggu.urdf.xacro']).perform(context)
     doc = xacro.process_file(xacro_file, mappings=mappings)
@@ -153,6 +155,10 @@ def generate_launch_description():
                               description='real: device alias in /etc/drivelink/agent.json'),
         DeclareLaunchArgument('drivelink_token_file', default_value='/etc/drivelink/token',
                               description='real: agent token (user in the drivelink group)'),
+        DeclareLaunchArgument('drivelink_left_label', default_value='pid_left',
+                              description='real: DriveLink controller label, left wheel'),
+        DeclareLaunchArgument('drivelink_right_label', default_value='pid_right',
+                              description='real: DriveLink controller label, right wheel'),
         DeclareLaunchArgument(
             'lidar_config',
             default_value=PathJoinSubstitution(

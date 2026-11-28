@@ -14,8 +14,8 @@
   <xacro:arg name="drivelink_device" default="base"/>
   <xacro:arg name="drivelink_token_file" default="/etc/drivelink/token"/>
   <xacro:arg name="drivelink_token" default=""/>
-  <xacro:arg name="drivelink_left_label" default="left"/>
-  <xacro:arg name="drivelink_right_label" default="right"/>
+  <xacro:arg name="drivelink_left_label" default="pid_left"/>
+  <xacro:arg name="drivelink_right_label" default="pid_right"/>
   <xacro:arg name="drivelink_imu_label" default="imu"/>
 
   <xacro:property name="mode" value="$(arg mode)"/>
