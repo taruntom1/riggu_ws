@@ -79,8 +79,9 @@ rosdep install --from-paths "${pkgs[@]}" --ignore-src --rosdistro jazzy -y --ski
 log "colcon build"
 colcon build --symlink-install --packages-skip riggu_gazebo
 
-if [[ $RESTART == 1 ]] && systemctl list-unit-files riggu-base.service &>/dev/null \
-  && systemctl list-unit-files riggu-base.service | grep -q riggu-base; then
+# No `systemctl ... | grep -q` here: with pipefail, grep -q exiting early SIGPIPEs systemctl
+# and the restart was skipped at random.
+if [[ $RESTART == 1 ]] && systemctl cat riggu-base.service &>/dev/null; then
   log "restart riggu-base"
   sudo systemctl restart riggu-base.service
 fi
